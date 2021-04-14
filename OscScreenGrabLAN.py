@@ -45,10 +45,12 @@ __author__ = 'RoGeorge'
 #
 
 # Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    filename=os.path.basename(sys.argv[0]) + '.log',
-                    filemode='w')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename=os.path.basename(sys.argv[0]) + '.log',
+    filemode='w',
+)
 
 logging.info("***** New run started...")
 logging.info("OS Platform: " + str(platform.uname()))
@@ -96,6 +98,7 @@ def print_help():
     print "    No VISA, IVI or Rigol drivers are needed."
     print
 
+
 # Read/verify file type
 if len(sys.argv) <= 1:
     print_help()
@@ -127,7 +130,7 @@ if response != 0:
 # The default telnetlib drops 0x00 characters,
 #   so a modified library 'telnetlib_receive_all' is used instead
 tn = Telnet(IP_DS1104Z, port)
-instrument_id = command(tn, "*IDN?")    # ask for instrument ID
+instrument_id = command(tn, "*IDN?")  # ask for instrument ID
 
 # Check if instrument is set to accept LAN commands
 if instrument_id == "command error":
@@ -138,9 +141,14 @@ if instrument_id == "command error":
 
 # Check if instrument is indeed a Rigol DS1000Z series
 id_fields = instrument_id.split(",")
-if (id_fields[company] != "RIGOL TECHNOLOGIES") or \
-        (id_fields[model][:3] != "DS1") or (id_fields[model][-1] != "Z"):
-    print "Found instrument model", "'" + id_fields[model] + "'", "from", "'" + id_fields[company] + "'"
+if (
+    (id_fields[company] != "RIGOL TECHNOLOGIES")
+    or (id_fields[model][:3] != "DS1")
+    or (id_fields[model][-1] != "Z")
+):
+    print "Found instrument model", "'" + id_fields[model] + "'", "from", "'" + id_fields[
+        company
+    ] + "'"
     print "WARNING: No Rigol from series DS1000Z found at", IP_DS1104Z
     print
     typed = raw_input("ARE YOU SURE YOU WANT TO CONTINUE? (No/Yes):")
@@ -162,8 +170,13 @@ if file_format in ["png", "bmp"]:
     expectedBuffLen = expected_buff_bytes(buff)
     # Just in case the transfer did not complete in the expected time, read the remaining 'buff' chunks
     while len(buff) < expectedBuffLen:
-        logging.warning("Received LESS data then expected! (" +
-                        str(len(buff)) + " out of " + str(expectedBuffLen) + " expected 'buff' bytes.)")
+        logging.warning(
+            "Received LESS data then expected! ("
+            + str(len(buff))
+            + " out of "
+            + str(expectedBuffLen)
+            + " expected 'buff' bytes.)"
+        )
         tmp = tn.read_until("\n", smallWait)
         if len(tmp) == 0:
             break
@@ -171,14 +184,19 @@ if file_format in ["png", "bmp"]:
         logging.warning(str(len(tmp)) + " leftover bytes added to 'buff'.")
 
     if len(buff) < expectedBuffLen:
-        logging.error("After reading all data chunks, 'buff' is still shorter then expected! (" +
-                      str(len(buff)) + " out of " + str(expectedBuffLen) + " expected 'buff' bytes.)")
+        logging.error(
+            "After reading all data chunks, 'buff' is still shorter then expected! ("
+            + str(len(buff))
+            + " out of "
+            + str(expectedBuffLen)
+            + " expected 'buff' bytes.)"
+        )
         sys.exit("ERROR")
 
     # Strip TMC Blockheader and keep only the data
     tmcHeaderLen = tmc_header_bytes(buff)
     expectedDataLen = expected_data_bytes(buff)
-    buff = buff[tmcHeaderLen: tmcHeaderLen+expectedDataLen]
+    buff = buff[tmcHeaderLen : tmcHeaderLen + expectedDataLen]
 
     # Save as PNG or BMP according to file_format
     im = Image.open(StringIO.StringIO(buff))
@@ -226,13 +244,18 @@ elif file_format == "csv":
             command(tn, ":WAV:STOP 1200")
 
         buff = ""
-        print "Data from channel '" + str(channel) + "', points " + str(1) + "-" + str(1200) + ": Receiving..."
+        print "Data from channel '" + str(channel) + "', points " + str(1) + "-" + str(
+            1200
+        ) + ": Receiving..."
         buffChunk = command(tn, ":WAV:DATA?")
 
         # Just in case the transfer did not complete in the expected time
         while buffChunk[-1] != "\n":
-            logging.warning("The data transfer did not complete in the expected time of " +
-                            str(smallWait) + " second(s).")
+            logging.warning(
+                "The data transfer did not complete in the expected time of "
+                + str(smallWait)
+                + " second(s)."
+            )
 
             tmp = tn.read_until("\n", smallWait)
             if len(tmp) == 0:
@@ -242,7 +265,7 @@ elif file_format == "csv":
 
         # Append data chunks
         # Strip TMC Blockheader and terminator bytes
-        buff += buffChunk[tmc_header_bytes(buffChunk):-1] + ","
+        buff += buffChunk[tmc_header_bytes(buffChunk) : -1] + ","
 
         # Strip the last \n char
         buff = buff[:-1]
