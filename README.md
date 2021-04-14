@@ -15,6 +15,34 @@ The original repo has not been touched in 4 years and appears to be languishing.
     - General code cleanup / refactoring.
     - Adopt click for argument parsing.
 
+Usage:
+```
+$ ./OscScreenGrabLAN.py --help
+usage: OscScreenGrabLAN.py [-h] [-t {png,bmp,csv}] [-1 LABEL1] [-2 LABEL2] [-3 LABEL3] [-4 LABEL4] [-n NOTE]
+                           [hostname] [filename]
+
+Take screen captures from DS1000Z-series oscilloscopes
+
+positional arguments:
+  hostname              Hostname or IP address of the oscilloscope
+  filename              Optional name of output file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -t {png,bmp,csv}, --type {png,bmp,csv}
+                        Optional type of file to save
+  -1 LABEL1, --label1 LABEL1
+                        Channel 1 label
+  -2 LABEL2, --label2 LABEL2
+                        Channel 2 label
+  -3 LABEL3, --label3 LABEL3
+                        Channel 3 label
+  -4 LABEL4, --label4 LABEL4
+                        Channel 4 label
+  -n NOTE, --note NOTE  Note label
+
+$
+```
 # DS1054Z_screen_capture
 
 'OscScreenGrabLAN.py' is a Python script that captures
