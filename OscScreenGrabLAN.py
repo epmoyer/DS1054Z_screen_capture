@@ -24,7 +24,7 @@ import pathlib
 from Rigol_functions import *
 from telnetlib_receive_all import Telnet
 
-__version__ = 'v1.1.0'
+__version__ = 'v2.0.0u'
 # Added TMC Blockheader decoding
 # Added possibility to manually allow run for scopes other then DS1000Z
 __author__ = 'RoGeorge'

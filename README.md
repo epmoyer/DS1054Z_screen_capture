@@ -1,4 +1,22 @@
+# WORK IN PROGRESS
+I have forked the [original repo](https://github.com/RoGeorge/DS1054Z_screen_capture) and am currently in the progress of updating it.  Much of the "User Manaul" text below is now out of date.
+
+The original repo has not been touched in 4 years and appears to be languishing.
+
+- **Current state:**
+    - The project now supports Python 3.
+    - I have no plans to support or test with Python 2.
+    - Image annotation has been added and is working (see section below).
+    - I have not tested on Windows. The current code base is running on OSX with Python 3.8 using a Rigol DS1054Z.
+- **TODO:**
+    - The original project contained a long list of "TODO"s in `OscScreenGrabLAN.py`.  I have not reviewed them or assessed my likelihood of taking them on.
+    - Add option to disable all image modifications.
+    - Add license file for the annotation font (`Inconsolata-SemiBold.ttf`, from Google fonts).
+    - General code cleanup / refactoring.
+    - Adopt click for argument parsing.
+
 # DS1054Z_screen_capture
+
 'OscScreenGrabLAN.py' is a Python script that captures
 whatever is displayed on the screen of a Rigol DS1000Z series oscilloscope.
 
@@ -77,7 +95,7 @@ Usage examples:
     - Signal Names (options `-1`, `-2`, `-3`, `-4`)
 
 **TODO:**
-- Add option to suppress all image modifications (in case you want to capture the "raw" screen, meus and all).
+- Add option to suppress all image modifications (in case one wants to capture the "raw" screen, meus and all).
 
 ### Example Annotation
 `OscScreenGrabLAN.py -1 TEST_SIGNAL_1 -2 TEST_SIGNAL_2 -3 TEST_SIGNAL_3 -4 TEST_SIGNAL_4 -n "Example Annotated Capture"`
