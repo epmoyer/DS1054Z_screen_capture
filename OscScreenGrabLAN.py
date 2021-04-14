@@ -145,7 +145,7 @@ def run(hostname, filename, filetype, args):
     if filename is None:
         filename = f"{path_to_save}{id_fields[model]}_{timestamp}.{filetype.name}"
         if args.note is not None:
-            filename_base = args.note
+            filename_base = args.note.replace(' ', '_')
             suffix = ''
             for i in range(20):
                 suffix = '' if i == 0 else f'_{i+1}'

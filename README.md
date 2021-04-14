@@ -16,8 +16,7 @@ Tested with Windows 10, Python 2.7.12, pillow and Rigol DS1104Z (a fully upgrade
 Tested with Linux Ubuntu 16.04.1, Python 2.7.12 and pillow.
 
 
-User Manual:
------------
+## User Manual:
 This program captures either the waveform or the whole screen
     of a Rigol DS1000Z series oscilloscope, then save it on the computer
     as a CSV, PNG or BMP file with a timestamp in the file name.
@@ -64,8 +63,23 @@ Usage examples:
     python OscScreenGrabLAN.py png 192.168.1.3
     python OscScreenGrabLAN.py csv 192.168.1.3
 
+### Image Annotation
 
+- The following image "clutter" is automatically removed:
+    - Left on-screen menu.
+    - Right on-screen menu.
+    - Upper left RIGOL logo.
+    - Lower right status icons (sound, etc.)
+- The following annotation is automatically added:
+    - Time/Date stamp (Upper left)
+- The following annotations are optionally added:
+    - Note (`-n` option)
+    - Signal Names (options `-1`, `-2`, `-3`, `-4`)
 
+**TODO:**
+- Add option to suppress all image modifications (in case you want to capture the "raw" screen, meus and all).
 
+### Example Annotation
+`OscScreenGrabLAN.py -1 TEST_SIGNAL_1 -2 TEST_SIGNAL_2 -3 TEST_SIGNAL_3 -4 TEST_SIGNAL_4 -n "Example Annotated Capture"`
 
-    
+![](captures/Example_Annotated_Capture.png)
