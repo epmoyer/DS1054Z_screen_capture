@@ -102,5 +102,4 @@ ENV/
 
 # Local development directories
 untracked/
-captures/
 .vscode/
