@@ -354,6 +354,19 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
     tn.close()
 
 def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
+    """Annotate and declutter image.
+
+    - The following image "clutter" is automatically removed:
+        - Left on-screen menu.
+        - Right on-screen menu.
+        - Upper left RIGOL logo.
+        - Lower right status icons (sound, etc.)
+    - The following annotation is automatically added:
+        - Time/Date stamp (Upper left)
+    - The following annotations are optionally added:
+        - Note ("-n" option)
+        - Signal labels (options "-1", "-2", "-3", "-4")
+    """
 
     # -------------------------------
     # Replace Rigol logo with timestamp
