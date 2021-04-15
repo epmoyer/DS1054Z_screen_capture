@@ -133,7 +133,8 @@ def test_ping(hostname):
 @click.option('-2', '--label2', help='Channe 2 label.')
 @click.option('-3', '--label3', help='Channe 3 label.')
 @click.option('-4', '--label4', help='Channe 4 label.')
-def main(hostname, filename, file_extension, note, label1, label2, label3, label4):
+@click.option('-r', '--raw', 'enable_raw', is_flag=True, help='Save raw image (with no annotation or decluttering)')
+def main(hostname, filename, file_extension, note, label1, label2, label3, label4, enable_raw):
     """Take screen captures from DS1000Z-series oscilloscopes.
 
     \b
@@ -240,56 +241,9 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
             f.write(buff)
         print(f'Saved raw data to "{filename}"')
 
-        # -------------------------------
-        # Replace Rigol logo with timestamp
-        # -------------------------------
-        print("Stripping logo...")
-        image = Image.open(filename)
-        draw = ImageDraw.Draw(image)
-        # Users may call this app from a different directory, so need to figure out the
-        # absolute path to the font file in this module's directory.
-        font_path = pathlib.Path(__file__).parent / pathlib.Path('Inconsolata-SemiBold.ttf')
-        font = ImageFont.truetype(str(font_path), 12)
-
-        # Erase logo
-        draw.rectangle(((3, 8), (80, 28)), fill=0)
-        # Erase left menu and enclosing box
-        draw.rectangle(((0, 37), (59, 450)), fill=0)
-        # Erase right menu items
-        draw.rectangle(((705, 38), (799, 436)), fill=0)
-        # Erase right menu "tab" text (menu title)
-        draw.rectangle(((690, 39), (704, 117)), fill=0)
-        # Erase lower right speaker on/off icon
-        draw.rectangle(((762, 456), (799, 479)), fill=0)
-
-        # Draw timestamp
-        arrow_time = arrow.get(timestamp_time)
-        time_text = str(arrow_time)
-        time_text = time_text[0:10] + '\n' + time_text[11:19]
-        draw.text((4, 2), time_text, font=font, fill=(255, 255, 255))
-
-        # Draw channel labels
-        image = image.rotate(90, expand=True)  # Counterclockwise
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype(str(font_path), 16)
-        location = [40, 1]
-        labels = (
-            (note, "#b0b0b0"),
-            (label1, "#F7FA52"),
-            (label2, "#00E1DD"),
-            (label3, "#DD00DD"),
-            (label4, "#007FF5"),
-        )
-        for index, item in enumerate(labels):
-            label_text, color = item
-            if label_text:
-                text = f'CH{index}: {label_text}' if index > 0 else f'{label_text}'
-                draw.text(location, text, font=font, fill=color)
-                location[1] += 18  # Line spacing
-        image = image.rotate(-90, expand=True)  # Clockwise
-
-        image.save(filename)
-        print("Done.")
+        if not enable_raw:
+            annotate(filename, timestamp_time, note, label1, label2, label3, label4)
+        
 
     # TODO: Change WAV:FORM from ASC to BYTE
     elif filetype is FileType.csv:
@@ -399,6 +353,58 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
 
     tn.close()
 
+def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
+
+    # -------------------------------
+    # Replace Rigol logo with timestamp
+    # -------------------------------
+    print("Stripping logo...")
+    image = Image.open(filename)
+    draw = ImageDraw.Draw(image)
+    # Users may call this app from a different directory, so need to figure out the
+    # absolute path to the font file in this module's directory.
+    font_path = pathlib.Path(__file__).parent / pathlib.Path('Inconsolata-SemiBold.ttf')
+    font = ImageFont.truetype(str(font_path), 12)
+
+    # Erase logo
+    draw.rectangle(((3, 8), (80, 28)), fill=0)
+    # Erase left menu and enclosing box
+    draw.rectangle(((0, 37), (59, 450)), fill=0)
+    # Erase right menu items
+    draw.rectangle(((705, 38), (799, 436)), fill=0)
+    # Erase right menu "tab" text (menu title)
+    draw.rectangle(((690, 39), (704, 117)), fill=0)
+    # Erase lower right speaker on/off icon
+    draw.rectangle(((762, 456), (799, 479)), fill=0)
+
+    # Draw timestamp
+    arrow_time = arrow.get(timestamp_time)
+    time_text = str(arrow_time)
+    time_text = time_text[0:10] + '\n' + time_text[11:19]
+    draw.text((4, 2), time_text, font=font, fill=(255, 255, 255))
+
+    # Draw channel labels
+    image = image.rotate(90, expand=True)  # Counterclockwise
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype(str(font_path), 16)
+    location = [40, 1]
+    labels = (
+        (note, "#b0b0b0"),
+        (label1, "#F7FA52"),
+        (label2, "#00E1DD"),
+        (label3, "#DD00DD"),
+        (label4, "#007FF5"),
+    )
+    for index, item in enumerate(labels):
+        label_text, color = item
+        if label_text:
+            text = f'CH{index}: {label_text}' if index > 0 else f'{label_text}'
+            draw.text(location, text, font=font, fill=color)
+            location[1] += 18  # Line spacing
+    image = image.rotate(-90, expand=True)  # Clockwise
+
+    image.save(filename)
+    print("Done.")
 
 if __name__ == "__main__":
     main()
