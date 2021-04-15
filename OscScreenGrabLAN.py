@@ -10,14 +10,14 @@ connection with the oscilloscope.
 """
 
 # Standard Library
-import argparse
 import logging
 import os
 import platform
 import subprocess
 import sys
 import time
-import pathlib
+import json
+from pathlib import Path
 from enum import Enum, auto
 
 # Library
@@ -73,7 +73,7 @@ __author__ = 'RoGeorge'
 # Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 # EPM: Users may call this app from a different directory, so need to figure out the
 #      absolute path to the log file in this module's directory.
-log_path = pathlib.Path(__file__).parent / pathlib.Path(os.path.basename(sys.argv[0]) + '.log')
+log_path = Path(__file__).parent / Path(os.path.basename(sys.argv[0]) + '.log')
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -89,6 +89,8 @@ log_running_python_versions()
 # path_to_save = "captures/"
 path_to_save = os.getcwd() + '/'
 IP_DS1104Z_DEFAULT_IP = "169.254.247.73"
+
+CONFIG_FILENAME = 'config.json'
 
 # Rigol/LXI specific constants
 port = 5555
@@ -108,20 +110,7 @@ class FileType(Enum):
     csv = auto()
 
 
-# Check network response (ping)
-def test_ping(hostname):
-    """Ping hostname once"""
-    if platform.system() == "Windows":
-        command = ['ping', '-n', '1', hostname]
-    else:
-        command = ['ping', '-c', '1', hostname]
-    completed = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    if completed.returncode != 0:
-        print()
-        print("WARNING! No response pinging", hostname)
-        print("Check network cables and settings.")
-        print("You should be able to ping the oscilloscope.")
 
 
 @click.command()
@@ -138,7 +127,8 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
     """Take screen captures from DS1000Z-series oscilloscopes.
 
     \b
-    hostname: Hostname or IP address of the oscilloscope.
+    hostname: Hostname or IP address of the oscilloscope.  If not supplied (or the word
+              "default") then the value of "default_hostname" from config.json will be used.
     filename: Name of output file.
 
     """
@@ -149,7 +139,13 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
         print(f"Unknown file type: {file_extension}")
         return
 
-    test_ping(hostname)
+    with open(CONFIG_FILENAME, 'r') as file:
+        config = json.load(file)
+    if hostname in (None, 'default'):
+        hostname = config['default_hostname']
+
+    if not test_ping(hostname):
+        sys.exit()
 
     # Open a modified telnet session
     # The default telnetlib drops 0x00 characters,
@@ -191,7 +187,7 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
             for i in range(20):
                 suffix = '' if i == 0 else f'_{i+1}'
                 filename_candidate = f'{filename_base}{suffix}.{filetype.name}'
-                path = pathlib.Path(filename_candidate)
+                path = Path(filename_candidate)
                 if not path.exists():
                     filename = filename_candidate
                     break
@@ -376,7 +372,7 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
     draw = ImageDraw.Draw(image)
     # Users may call this app from a different directory, so need to figure out the
     # absolute path to the font file in this module's directory.
-    font_path = pathlib.Path(__file__).parent / pathlib.Path('Inconsolata-SemiBold.ttf')
+    font_path = Path(__file__).parent / Path('Inconsolata-SemiBold.ttf')
     font = ImageFont.truetype(str(font_path), 12)
 
     # Erase logo
@@ -418,6 +414,29 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
 
     image.save(filename)
     print("Done.")
+
+# Check network response (ping)
+def test_ping(hostname):
+    """Ping hostname to see if it responds.
+
+    Returns:
+        True if host responded, False otherwise
+    """
+    if platform.system() == "Windows":
+        command = ['ping', '-n', '1', hostname]
+    else:
+        command = ['ping', '-c', '1', hostname]
+    completed = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    if completed.returncode != 0:
+        print(
+            '\n'
+            f'WARNING! No response pinging "{hostname}"".\n'
+            'Check network cables and settings.\n'
+            'You should be able to ping the oscilloscope.'
+        )
+        return False
+    return True
 
 if __name__ == "__main__":
     main()
