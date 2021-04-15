@@ -26,11 +26,11 @@ Usage: OscScreenGrabLAN.py [OPTIONS] [HOSTNAME] [FILENAME]
 Options:
   -t, --type TEXT    Type of file to save.
   -n, --note TEXT    Note label.
-  -1, --label1 TEXT  Channe 1 label.
-  -2, --label2 TEXT  Channe 2 label.
-  -3, --label3 TEXT  Channe 3 label.
-  -4, --label4 TEXT  Channe 4 label.
-  -r, --raw          Save raw image (with no annotation or decluttering)
+  -1, --label1 TEXT  Channel 1 label.
+  -2, --label2 TEXT  Channel 2 label.
+  -3, --label3 TEXT  Channel 3 label.
+  -4, --label4 TEXT  Channel 4 label.
+  -r, --raw          Save raw image (with no annotation or de-cluttering)
   --help             Show this message and exit.
 
 $
