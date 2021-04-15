@@ -13,7 +13,6 @@ The original repo has not been touched in 4 years and appears to be languishing.
     - Add option to disable all image modifications.
     - Add license file for the annotation font (`Inconsolata-SemiBold.ttf`, from Google fonts).
     - General code cleanup / refactoring.
-    - Adopt click for argument parsing.
 
 Usage:
 ```
