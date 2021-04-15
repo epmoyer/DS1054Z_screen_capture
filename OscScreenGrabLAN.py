@@ -75,6 +75,7 @@ TELNET_TIMEOUT_SECONDS = 1
 INDEX_COMPANY = 0
 INDEX_MODEL = 1
 
+
 @click.command()
 @click.argument('hostname', required=False, default=None)
 @click.argument('filename', required=False)
@@ -179,13 +180,13 @@ def main(
 
     print(f'Instrument ID: "{instrument_id.strip()}".')
 
-
     timestamp_time = time.localtime()
-    timestamp = time.strftime("%Y-%m-%d_%H.%M.%S", timestamp_time)
 
     if filename is None:
         suffix = 'csv' if save_as_csv else 'png'
-        filename = build_save_filename(save_path, timestamp, id_fields[INDEX_MODEL], suffix, note)
+        filename = build_save_filename(
+            save_path, timestamp_time, id_fields[INDEX_MODEL], suffix, note
+        )
 
     if save_as_csv:
         capture_csv_data(filename, telnet)
@@ -344,8 +345,9 @@ def capture_csv_data(filename, telnet):
     print(f'Saved file: "{filename}".')
 
 
-def build_save_filename(save_path, timestamp, scope_model, suffix, note):
+def build_save_filename(save_path, timestamp_time, scope_model, suffix, note):
     # Preapeare filename as: MODEL_SERIAL_YYYY-MM-DD_HH.MM.SS
+    timestamp = time.strftime("%Y-%m-%d_%H.%M.%S", timestamp_time)
     filename = f"{save_path}{scope_model}_{timestamp}.{suffix}"
     if note is None:
         return filename
