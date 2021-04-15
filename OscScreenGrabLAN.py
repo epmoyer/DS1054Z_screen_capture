@@ -170,7 +170,6 @@ def main(
 
 
 def capture_screenshot(filename, telnet):
-
     # Ask for an oscilloscope display print screen
     print("Receiving screen capture...")
     buff = command(telnet, ":DISP:DATA? ON,OFF,PNG")
@@ -399,7 +398,6 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
     print("Done.")
 
 
-# Check network response (ping)
 def test_ping(hostname):
     """Ping hostname to see if it responds.
 
