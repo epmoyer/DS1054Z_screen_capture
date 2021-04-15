@@ -7,7 +7,9 @@ __author__ = 'RoGeorge'
 
 
 def log_running_python_versions():
-    logging.info("Python version: " + str(sys.version) + ", " + str(sys.version_info))  # () required in Python 3.
+    logging.info(
+        "Python version: " + str(sys.version) + ", " + str(sys.version_info)
+    )  # () required in Python 3.
 
     installed_packages = get_installed_distributions()
     installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
@@ -41,7 +43,7 @@ def tmc_header_bytes(buff):
 
 
 def expected_data_bytes(buff):
-    return int(buff[2:tmc_header_bytes(buff)])
+    return int(buff[2 : tmc_header_bytes(buff)])
 
 
 def expected_buff_bytes(buff):

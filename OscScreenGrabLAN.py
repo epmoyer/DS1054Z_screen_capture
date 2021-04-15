@@ -62,10 +62,12 @@ __author__ = 'RoGeorge'
 # EPM: Users may call this app from a different directory, so need to figure out the
 #      absolute path to the log file in this module's directory.
 log_path = pathlib.Path(__file__).parent / pathlib.Path(os.path.basename(sys.argv[0]) + '.log')
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    filename=log_path,
-                    filemode='w')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename=log_path,
+    filemode='w',
+)
 
 logging.info("***** New run started...")
 logging.info("OS Platform: " + str(platform.uname()))
@@ -101,14 +103,14 @@ def test_ping(hostname):
         command = ['ping', '-n', '1', hostname]
     else:
         command = ['ping', '-c', '1', hostname]
-    completed = subprocess.run(command, stdout=subprocess.DEVNULL,
-                   stderr=subprocess.DEVNULL)
+    completed = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     if completed.returncode != 0:
         print()
         print("WARNING! No response pinging", hostname)
         print("Check network cables and settings.")
         print("You should be able to ping the oscilloscope.")
+
 
 def run(hostname, filename, filetype, args):
     test_ping(hostname)
@@ -117,27 +119,30 @@ def run(hostname, filename, filetype, args):
     # The default telnetlib drops 0x00 characters,
     #   so a modified library 'telnetlib_receive_all' is used instead
     tn = Telnet(hostname, port)
-    instrument_id = command(tn, "*IDN?").decode()    # ask for instrument ID
+    instrument_id = command(tn, "*IDN?").decode()  # ask for instrument ID
 
     # Check if instrument is set to accept LAN commands
     if instrument_id == "command error":
-        print ("Instrument reply:", instrument_id)
-        print ("Check the oscilloscope settings.")
-        print ("Utility -> IO Setting -> RemoteIO -> LAN must be ON")
+        print("Instrument reply:", instrument_id)
+        print("Check the oscilloscope settings.")
+        print("Utility -> IO Setting -> RemoteIO -> LAN must be ON")
         sys.exit("ERROR")
 
     # Check if instrument is indeed a Rigol DS1000Z series
     id_fields = instrument_id.split(",")
-    if (id_fields[company] != "RIGOL TECHNOLOGIES") or \
-            (id_fields[model][:3] != "DS1") or (id_fields[model][-1] != "Z"):
-        print ("Found instrument model '{}' from '{}'".format(id_fields[model], id_fields[company]))
-        print ("WARNING: No Rigol from series DS1000Z found at", hostname)
-        print ()
+    if (
+        (id_fields[company] != "RIGOL TECHNOLOGIES")
+        or (id_fields[model][:3] != "DS1")
+        or (id_fields[model][-1] != "Z")
+    ):
+        print("Found instrument model '{}' from '{}'".format(id_fields[model], id_fields[company]))
+        print("WARNING: No Rigol from series DS1000Z found at", hostname)
+        print()
         typed = raw_input("ARE YOU SURE YOU WANT TO CONTINUE? (No/Yes):")
         if typed != 'Yes':
             sys.exit('Nothing done. Bye!')
 
-    print ("Instrument ID:", instrument_id)
+    print("Instrument ID:", instrument_id)
 
     # Prepare filename as C:\MODEL_SERIAL_YYYY-MM-DD_HH.MM.SS
     timestamp_time = time.localtime()
@@ -157,7 +162,7 @@ def run(hostname, filename, filetype, args):
 
     if filetype in {FileType.png, FileType.bmp}:
         # Ask for an oscilloscope display print screen
-        print ("Receiving screen capture...")
+        print("Receiving screen capture...")
 
         if filetype is FileType.png:
             buff = command(tn, ":DISP:DATA? ON,OFF,PNG")
@@ -167,8 +172,13 @@ def run(hostname, filename, filetype, args):
         expectedBuffLen = expected_buff_bytes(buff)
         # Just in case the transfer did not complete in the expected time, read the remaining 'buff' chunks
         while len(buff) < expectedBuffLen:
-            logging.warning("Received LESS data then expected! (" +
-                            str(len(buff)) + " out of " + str(expectedBuffLen) + " expected 'buff' bytes.)")
+            logging.warning(
+                "Received LESS data then expected! ("
+                + str(len(buff))
+                + " out of "
+                + str(expectedBuffLen)
+                + " expected 'buff' bytes.)"
+            )
             tmp = tn.read_until(b"\n", smallWait)
             if len(tmp) == 0:
                 break
@@ -176,14 +186,19 @@ def run(hostname, filename, filetype, args):
             logging.warning(str(len(tmp)) + " leftover bytes added to 'buff'.")
 
         if len(buff) < expectedBuffLen:
-            logging.error("After reading all data chunks, 'buff' is still shorter then expected! (" +
-                          str(len(buff)) + " out of " + str(expectedBuffLen) + " expected 'buff' bytes.)")
+            logging.error(
+                "After reading all data chunks, 'buff' is still shorter then expected! ("
+                + str(len(buff))
+                + " out of "
+                + str(expectedBuffLen)
+                + " expected 'buff' bytes.)"
+            )
             sys.exit("ERROR")
 
         # Strip TMC Blockheader and keep only the data
         tmcHeaderLen = tmc_header_bytes(buff)
         expectedDataLen = expected_data_bytes(buff)
-        buff = buff[tmcHeaderLen: tmcHeaderLen+expectedDataLen]
+        buff = buff[tmcHeaderLen : tmcHeaderLen + expectedDataLen]
 
         # Write raw data to file
         with open(filename, 'wb') as f:
@@ -202,9 +217,9 @@ def run(hostname, filename, filetype, args):
         font = ImageFont.truetype(str(font_path), 12)
 
         # Erase logo
-        draw.rectangle(((3, 8), (80, 28)), fill=0) 
+        draw.rectangle(((3, 8), (80, 28)), fill=0)
         # Erase left menu and enclosing box
-        draw.rectangle(((0, 37), (59, 450)), fill=0) 
+        draw.rectangle(((0, 37), (59, 450)), fill=0)
         # Erase right menu items
         draw.rectangle(((705, 38), (799, 436)), fill=0)
         # Erase right menu "tab" text (menu title)
@@ -219,7 +234,7 @@ def run(hostname, filename, filetype, args):
         draw.text((4, 2), time_text, font=font, fill=(255, 255, 255))
 
         # Draw channel labels
-        image = image.rotate(90, expand=True) # Counterclockwise
+        image = image.rotate(90, expand=True)  # Counterclockwise
         draw = ImageDraw.Draw(image)
         font = ImageFont.truetype(str(font_path), 16)
         location = [40, 1]
@@ -235,12 +250,11 @@ def run(hostname, filename, filetype, args):
             if label_text:
                 text = f'CH{index}: {label_text}' if index > 0 else f'{label_text}'
                 draw.text(location, text, font=font, fill=color)
-                location[1] += 18 # Line spacing
-        image = image.rotate(-90, expand=True) # Clockwise
+                location[1] += 18  # Line spacing
+        image = image.rotate(-90, expand=True)  # Clockwise
 
         image.save(filename)
         print("Done.")
-
 
     # TODO: Change WAV:FORM from ASC to BYTE
     elif filetype is FileType.csv:
@@ -271,7 +285,7 @@ def run(hostname, filename, filetype, args):
 
         # for each active channel
         for channel in chanList:
-            print ()
+            print()
 
             # Set WAVE parameters
             command(tn, ":WAV:SOUR " + channel)
@@ -283,13 +297,24 @@ def run(hostname, filename, filetype, args):
                 command(tn, ":WAV:STOP 1200")
 
             buff = ""
-            print ("Data from channel '" + str(channel) + "', points " + str(1) + "-" + str(1200) + ": Receiving...")
+            print(
+                "Data from channel '"
+                + str(channel)
+                + "', points "
+                + str(1)
+                + "-"
+                + str(1200)
+                + ": Receiving..."
+            )
             buffChunk = command(tn, ":WAV:DATA?")
 
             # Just in case the transfer did not complete in the expected time
             while buffChunk[-1] != "\n":
-                logging.warning("The data transfer did not complete in the expected time of " +
-                                str(smallWait) + " second(s).")
+                logging.warning(
+                    "The data transfer did not complete in the expected time of "
+                    + str(smallWait)
+                    + " second(s)."
+                )
 
                 tmp = tn.read_until(b"\n", smallWait)
                 if len(tmp) == 0:
@@ -299,7 +324,7 @@ def run(hostname, filename, filetype, args):
 
             # Append data chunks
             # Strip TMC Blockheader and terminator bytes
-            buff += buffChunk[tmc_header_bytes(buffChunk):-1] + ","
+            buff += buffChunk[tmc_header_bytes(buffChunk) : -1] + ","
 
             # Strip the last \n char
             buff = buff[:-1]
@@ -335,30 +360,25 @@ def run(hostname, filename, filetype, args):
         scr_file.write(csv_buff)
         scr_file.close()
 
-        print ("Saved file:", "'" + filename + "'")
+        print("Saved file:", "'" + filename + "'")
 
     tn.close()
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Take screen captures from"
-            " DS1000Z-series oscilloscopes")
-    parser.add_argument("-t", "--type",
-            choices=FileType.__members__,
-            help="Optional type of file to save")
-    parser.add_argument("hostname", nargs="?",
-            help="Hostname or IP address of the oscilloscope")
-    parser.add_argument("filename", nargs="?",
-            help="Optional name of output file")
-    parser.add_argument("-1", "--label1",
-            help="Channel 1 label")
-    parser.add_argument("-2", "--label2",
-            help="Channel 2 label")
-    parser.add_argument("-3", "--label3",
-            help="Channel 3 label")
-    parser.add_argument("-4", "--label4",
-            help="Channel 4 label")
-    parser.add_argument("-n", "--note",
-            help="Note label")
+    parser = argparse.ArgumentParser(
+        description="Take screen captures from" " DS1000Z-series oscilloscopes"
+    )
+    parser.add_argument(
+        "-t", "--type", choices=FileType.__members__, help="Optional type of file to save"
+    )
+    parser.add_argument("hostname", nargs="?", help="Hostname or IP address of the oscilloscope")
+    parser.add_argument("filename", nargs="?", help="Optional name of output file")
+    parser.add_argument("-1", "--label1", help="Channel 1 label")
+    parser.add_argument("-2", "--label2", help="Channel 2 label")
+    parser.add_argument("-3", "--label3", help="Channel 3 label")
+    parser.add_argument("-4", "--label4", help="Channel 4 label")
+    parser.add_argument("-n", "--note", help="Note label")
 
     args = parser.parse_args()
 
