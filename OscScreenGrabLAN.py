@@ -226,7 +226,7 @@ def capture_csv_data(filename, telnet):
         response = command(telnet, ":" + channel + ":DISP?")
 
         # If channel is active
-        if response == '1\n':
+        if response == b'1\n':
             chanList += [channel]
 
     # the meaning of 'max' is   - will read only the displayed data when the scope is in RUN mode,
@@ -253,7 +253,7 @@ def capture_csv_data(filename, telnet):
             command(telnet, ":WAV:STAR 1")
             command(telnet, ":WAV:STOP 1200")
 
-        buff = ""
+        buff = b''
         print(
             "Data from channel '"
             + str(channel)
@@ -281,13 +281,13 @@ def capture_csv_data(filename, telnet):
 
         # Append data chunks
         # Strip TMC Blockheader and terminator bytes
-        buff += buffChunk[tmc_header_bytes(buffChunk) : -1] + ","
+        buff += buffChunk[tmc_header_bytes(buffChunk) : -1] + b","
 
         # Strip the last \n char
         buff = buff[:-1]
 
         # Process data
-        buff_list = buff.split(",")
+        buff_list = buff.split(b",")
 
         # Put read data into csv_buff
         csv_buff_list = csv_buff.split(os.linesep)
@@ -302,17 +302,18 @@ def capture_csv_data(filename, telnet):
             csv_buff = str(csv_buff_list[current_row]) + "," + str(channel) + os.linesep
 
         for point in buff_list:
+            point_str = point.decode("utf-8")
             current_row += 1
             if csv_first_column:
-                csv_buff += str(point) + os.linesep
+                csv_buff += point_str  + os.linesep
             else:
                 if current_row < csv_rows:
-                    csv_buff += str(csv_buff_list[current_row]) + "," + str(point) + os.linesep
+                    csv_buff += str(csv_buff_list[current_row]) + "," + point_str + os.linesep
                 else:
-                    csv_buff += "," + str(point) + os.linesep
+                    csv_buff += "," + point_str + os.linesep
 
     # Save data as CSV
-    scr_file = open(filename, "wb")
+    scr_file = open(filename, "w")
     scr_file.write(csv_buff)
     scr_file.close()
 
