@@ -18,7 +18,6 @@ import sys
 import time
 import json
 from pathlib import Path
-from enum import Enum, auto
 
 # Library
 from PIL import Image, ImageDraw, ImageFont
