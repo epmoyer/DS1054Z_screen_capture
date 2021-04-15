@@ -9,7 +9,7 @@ The program uses the LXI protocol, so the computer must have a LAN
 connection with the oscilloscope.
 """
 
-from enum import Enum, auto
+# Standard Library
 import argparse
 import logging
 import os
@@ -17,11 +17,22 @@ import platform
 import subprocess
 import sys
 import time
+import pathlib
+from enum import Enum, auto
+
+# Library
 from PIL import Image, ImageDraw, ImageFont
 import arrow
-import pathlib
+import click
 
-from Rigol_functions import *
+# Local
+from Rigol_functions import (
+    log_running_python_versions,
+    command,
+    tmc_header_bytes,
+    expected_data_bytes,
+    expected_buff_bytes,
+)
 from telnetlib_receive_all import Telnet
 
 __version__ = 'v2.0.0u'
@@ -57,6 +68,7 @@ __author__ = 'RoGeorge'
 # TODO: Add browse and custom filename selection
 # TODO: Create executable distributions
 #
+
 
 # Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 # EPM: Users may call this app from a different directory, so need to figure out the
@@ -112,7 +124,31 @@ def test_ping(hostname):
         print("You should be able to ping the oscilloscope.")
 
 
-def run(hostname, filename, filetype, args):
+@click.command()
+@click.argument('hostname', required=False, default=IP_DS1104Z_DEFAULT_IP)
+@click.argument('filename', required=False)
+@click.option('-t', '--type', 'file_extension', default='png', help='Type of file to save.')
+@click.option('-n', '--note', help='Note label.')
+@click.option('-1', '--label1', help='Channe 1 label.')
+@click.option('-2', '--label2', help='Channe 2 label.')
+@click.option('-3', '--label3', help='Channe 3 label.')
+@click.option('-4', '--label4', help='Channe 4 label.')
+@click.option('-r', '--raw', 'enable_raw', is_flag=True, help='Save raw image (with no annotation or decluttering)')
+def main(hostname, filename, file_extension, note, label1, label2, label3, label4, enable_raw):
+    """Take screen captures from DS1000Z-series oscilloscopes.
+
+    \b
+    hostname: Hostname or IP address of the oscilloscope.
+    filename: Name of output file.
+
+    """
+
+    try:
+        filetype = FileType[file_extension]
+    except KeyError:
+        print(f"Unknown file type: {file_extension}")
+        return
+
     test_ping(hostname)
 
     # Open a modified telnet session
@@ -135,7 +171,7 @@ def run(hostname, filename, filetype, args):
         or (id_fields[model][:3] != "DS1")
         or (id_fields[model][-1] != "Z")
     ):
-        print("Found instrument model '{}' from '{}'".format(id_fields[model], id_fields[company]))
+        print(f"Found instrument model '{id_fields[model]}' from '{id_fields[company]}'")
         print("WARNING: No Rigol from series DS1000Z found at", hostname)
         print()
         typed = raw_input("ARE YOU SURE YOU WANT TO CONTINUE? (No/Yes):")
@@ -149,8 +185,8 @@ def run(hostname, filename, filetype, args):
     timestamp = time.strftime("%Y-%m-%d_%H.%M.%S", timestamp_time)
     if filename is None:
         filename = f"{path_to_save}{id_fields[model]}_{timestamp}.{filetype.name}"
-        if args.note is not None:
-            filename_base = args.note.replace(' ', '_')
+        if note is not None:
+            filename_base = note.replace(' ', '_')
             suffix = ''
             for i in range(20):
                 suffix = '' if i == 0 else f'_{i+1}'
@@ -203,58 +239,11 @@ def run(hostname, filename, filetype, args):
         # Write raw data to file
         with open(filename, 'wb') as f:
             f.write(buff)
-        print('Saved raw data to "{}"'.format(filename))
+        print(f'Saved raw data to "{filename}"')
 
-        # -------------------------------
-        # Replace Rigol logo with timestamp
-        # -------------------------------
-        print("Stripping logo...")
-        image = Image.open(filename)
-        draw = ImageDraw.Draw(image)
-        # Users may call this app from a different directory, so need to figure out the
-        # absolute path to the font file in this module's directory.
-        font_path = pathlib.Path(__file__).parent / pathlib.Path('Inconsolata-SemiBold.ttf')
-        font = ImageFont.truetype(str(font_path), 12)
-
-        # Erase logo
-        draw.rectangle(((3, 8), (80, 28)), fill=0)
-        # Erase left menu and enclosing box
-        draw.rectangle(((0, 37), (59, 450)), fill=0)
-        # Erase right menu items
-        draw.rectangle(((705, 38), (799, 436)), fill=0)
-        # Erase right menu "tab" text (menu title)
-        draw.rectangle(((690, 39), (704, 117)), fill=0)
-        # Erase lower right speaker on/off icon
-        draw.rectangle(((762, 456), (799, 479)), fill=0)
-
-        # Draw timestamp
-        arrow_time = arrow.get(timestamp_time)
-        time_text = str(arrow_time)
-        time_text = time_text[0:10] + '\n' + time_text[11:19]
-        draw.text((4, 2), time_text, font=font, fill=(255, 255, 255))
-
-        # Draw channel labels
-        image = image.rotate(90, expand=True)  # Counterclockwise
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype(str(font_path), 16)
-        location = [40, 1]
-        labels = (
-            (args.note, "#b0b0b0"),
-            (args.label1, "#F7FA52"),
-            (args.label2, "#00E1DD"),
-            (args.label3, "#DD00DD"),
-            (args.label4, "#007FF5"),
-        )
-        for index, item in enumerate(labels):
-            label_text, color = item
-            if label_text:
-                text = f'CH{index}: {label_text}' if index > 0 else f'{label_text}'
-                draw.text(location, text, font=font, fill=color)
-                location[1] += 18  # Line spacing
-        image = image.rotate(-90, expand=True)  # Clockwise
-
-        image.save(filename)
-        print("Done.")
+        if not enable_raw:
+            annotate(filename, timestamp_time, note, label1, label2, label3, label4)
+        
 
     # TODO: Change WAV:FORM from ASC to BYTE
     elif filetype is FileType.csv:
@@ -364,40 +353,71 @@ def run(hostname, filename, filetype, args):
 
     tn.close()
 
+def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
+    """Annotate and declutter image.
+
+    - The following image "clutter" is automatically removed:
+        - Left on-screen menu.
+        - Right on-screen menu.
+        - Upper left RIGOL logo.
+        - Lower right status icons (sound, etc.)
+    - The following annotation is automatically added:
+        - Time/Date stamp (Upper left)
+    - The following annotations are optionally added:
+        - Note ("-n" option)
+        - Signal labels (options "-1", "-2", "-3", "-4")
+    """
+
+    # -------------------------------
+    # Replace Rigol logo with timestamp
+    # -------------------------------
+    print("Stripping logo...")
+    image = Image.open(filename)
+    draw = ImageDraw.Draw(image)
+    # Users may call this app from a different directory, so need to figure out the
+    # absolute path to the font file in this module's directory.
+    font_path = pathlib.Path(__file__).parent / pathlib.Path('Inconsolata-SemiBold.ttf')
+    font = ImageFont.truetype(str(font_path), 12)
+
+    # Erase logo
+    draw.rectangle(((3, 8), (80, 28)), fill=0)
+    # Erase left menu and enclosing box
+    draw.rectangle(((0, 37), (59, 450)), fill=0)
+    # Erase right menu items
+    draw.rectangle(((705, 38), (799, 436)), fill=0)
+    # Erase right menu "tab" text (menu title)
+    draw.rectangle(((690, 39), (704, 117)), fill=0)
+    # Erase lower right speaker on/off icon
+    draw.rectangle(((762, 456), (799, 479)), fill=0)
+
+    # Draw timestamp
+    arrow_time = arrow.get(timestamp_time)
+    time_text = str(arrow_time)
+    time_text = time_text[0:10] + '\n' + time_text[11:19]
+    draw.text((4, 2), time_text, font=font, fill=(255, 255, 255))
+
+    # Draw channel labels
+    image = image.rotate(90, expand=True)  # Counterclockwise
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype(str(font_path), 16)
+    location = [40, 1]
+    labels = (
+        (note, "#b0b0b0"),
+        (label1, "#F7FA52"),
+        (label2, "#00E1DD"),
+        (label3, "#DD00DD"),
+        (label4, "#007FF5"),
+    )
+    for index, item in enumerate(labels):
+        label_text, color = item
+        if label_text:
+            text = f'CH{index}: {label_text}' if index > 0 else f'{label_text}'
+            draw.text(location, text, font=font, fill=color)
+            location[1] += 18  # Line spacing
+    image = image.rotate(-90, expand=True)  # Clockwise
+
+    image.save(filename)
+    print("Done.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Take screen captures from" " DS1000Z-series oscilloscopes"
-    )
-    parser.add_argument(
-        "-t", "--type", choices=FileType.__members__, help="Optional type of file to save"
-    )
-    parser.add_argument("hostname", nargs="?", help="Hostname or IP address of the oscilloscope")
-    parser.add_argument("filename", nargs="?", help="Optional name of output file")
-    parser.add_argument("-1", "--label1", help="Channel 1 label")
-    parser.add_argument("-2", "--label2", help="Channel 2 label")
-    parser.add_argument("-3", "--label3", help="Channel 3 label")
-    parser.add_argument("-4", "--label4", help="Channel 4 label")
-    parser.add_argument("-n", "--note", help="Note label")
-
-    args = parser.parse_args()
-
-    # # If no type is specified, auto-detect from the filename
-    # if args.type is None:
-    #     if args.filename is None:
-    #         parser.error("Either a file type or a filename must be specified")
-    #     args.type = os.path.splitext(args.filename)[1][1:]
-
-    # EPM: Just default to png
-    if args.type is None:
-        args.type = 'png'
-    # EPM: default host
-    if args.hostname is None:
-        args.hostname = IP_DS1104Z_DEFAULT_IP
-
-    try:
-        args.type = FileType[args.type]
-    except KeyError:
-        parser.error("Unknown file type: {}".format(args.type))
-
-    run(args.hostname, args.filename, args.type, args)
+    main()
