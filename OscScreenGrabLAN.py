@@ -143,7 +143,7 @@ def main(
         save_path = os.getcwd() + '/'
 
     # -----------------------------
-    # Begin
+    # Connect to scope
     # -----------------------------
     if not test_ping(hostname):
         sys.exit()
@@ -178,14 +178,19 @@ def main(
 
     print(f'Instrument ID: "{instrument_id.strip()}".')
 
+    # -----------------------------
+    # Determine output filename
+    # -----------------------------
     timestamp_time = time.localtime()
-
     if filename is None:
         suffix = 'csv' if save_as_csv else 'png'
         filename = build_save_filename(
             save_path, timestamp_time, id_fields[INDEX_MODEL], suffix, note
         )
 
+    # -----------------------------
+    # Capture
+    # -----------------------------
     if save_as_csv:
         capture_csv_data(filename, telnet)
     else:
