@@ -129,11 +129,11 @@ def test_ping(hostname):
 @click.argument('filename', required=False)
 @click.option('-t', '--type', 'file_extension', default='png', help='Type of file to save.')
 @click.option('-n', '--note', help='Note label.')
-@click.option('-1', '--label1', help='Channe 1 label.')
-@click.option('-2', '--label2', help='Channe 2 label.')
-@click.option('-3', '--label3', help='Channe 3 label.')
-@click.option('-4', '--label4', help='Channe 4 label.')
-@click.option('-r', '--raw', 'enable_raw', is_flag=True, help='Save raw image (with no annotation or decluttering)')
+@click.option('-1', '--label1', help='Channel 1 label.')
+@click.option('-2', '--label2', help='Channel 2 label.')
+@click.option('-3', '--label3', help='Channel 3 label.')
+@click.option('-4', '--label4', help='Channel 4 label.')
+@click.option('-r', '--raw', 'enable_raw', is_flag=True, help='Save raw image (with no annotation or de-cluttering)')
 def main(hostname, filename, file_extension, note, label1, label2, label3, label4, enable_raw):
     """Take screen captures from DS1000Z-series oscilloscopes.
 
