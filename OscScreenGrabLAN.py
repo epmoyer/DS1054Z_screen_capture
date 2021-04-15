@@ -79,7 +79,6 @@ INDEX_MODEL = 1
 @click.command()
 @click.argument('hostname', required=False, default=None)
 @click.argument('filename', required=False)
-@click.option('-t', '--type', 'file_extension', default='png', help='Type of file to save.')
 @click.option('-n', '--note', help='Note label.')
 @click.option('-1', '--label1', help='Channel 1 label.')
 @click.option('-2', '--label2', help='Channel 2 label.')
@@ -97,7 +96,6 @@ INDEX_MODEL = 1
 def main(
     hostname,
     filename,
-    file_extension,
     note,
     label1,
     label2,
