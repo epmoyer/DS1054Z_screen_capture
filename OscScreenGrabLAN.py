@@ -9,7 +9,7 @@ The program uses the LXI protocol, so the computer must have a LAN
 connection with the oscilloscope.
 """
 
-from enum import Enum, auto
+# Standard Library
 import argparse
 import logging
 import os
@@ -17,10 +17,15 @@ import platform
 import subprocess
 import sys
 import time
+import pathlib
+from enum import Enum, auto
+
+# Library
 from PIL import Image, ImageDraw, ImageFont
 import arrow
-import pathlib
+import click
 
+# Local
 from Rigol_functions import *
 from telnetlib_receive_all import Telnet
 
@@ -57,6 +62,8 @@ __author__ = 'RoGeorge'
 # TODO: Add browse and custom filename selection
 # TODO: Create executable distributions
 #
+
+
 
 # Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 # EPM: Users may call this app from a different directory, so need to figure out the
@@ -111,8 +118,27 @@ def test_ping(hostname):
         print("Check network cables and settings.")
         print("You should be able to ping the oscilloscope.")
 
+@click.command()
+@click.argument('hostname', required=False, default=IP_DS1104Z_DEFAULT_IP)
+@click.argument('filename', required=False)
+@click.option('-t', '--type', 'filetype', default='png', help='Type of file to save.')
+@click.option('-n', '--note', help='Note label.')
+@click.option('-1', '--label1', help='Channe 1 label.')
+@click.option('-2', '--label2', help='Channe 2 label.')
+@click.option('-3', '--label3', help='Channe 3 label.')
+@click.option('-4', '--label4', help='Channe 4 label.')
+def main(hostname, filename, filetype, note, label1, label2, label3, label4):
+    """Take screen captures from DS1000Z-series oscilloscopes.
 
-def run(hostname, filename, filetype, args):
+    \b
+    hostname: Hostname or IP address of the oscilloscope.
+    filename: Name of output file.
+
+    """
+    # TODO: Move defaults into a config file
+    # print(hostname, filename, filetype, note, label1, label2, label3, label4)
+    # return
+
     test_ping(hostname)
 
     # Open a modified telnet session
@@ -366,38 +392,40 @@ def run(hostname, filename, filetype, args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Take screen captures from" " DS1000Z-series oscilloscopes"
-    )
-    parser.add_argument(
-        "-t", "--type", choices=FileType.__members__, help="Optional type of file to save"
-    )
-    parser.add_argument("hostname", nargs="?", help="Hostname or IP address of the oscilloscope")
-    parser.add_argument("filename", nargs="?", help="Optional name of output file")
-    parser.add_argument("-1", "--label1", help="Channel 1 label")
-    parser.add_argument("-2", "--label2", help="Channel 2 label")
-    parser.add_argument("-3", "--label3", help="Channel 3 label")
-    parser.add_argument("-4", "--label4", help="Channel 4 label")
-    parser.add_argument("-n", "--note", help="Note label")
+    main()
+    
+    # parser = argparse.ArgumentParser(
+    #     description="Take screen captures from" " DS1000Z-series oscilloscopes"
+    # )
+    # parser.add_argument(
+    #     "-t", "--type", choices=FileType.__members__, help="Optional type of file to save"
+    # )
+    # parser.add_argument("hostname", nargs="?", help="Hostname or IP address of the oscilloscope")
+    # parser.add_argument("filename", nargs="?", help="Optional name of output file")
+    # parser.add_argument("-1", "--label1", help="Channel 1 label")
+    # parser.add_argument("-2", "--label2", help="Channel 2 label")
+    # parser.add_argument("-3", "--label3", help="Channel 3 label")
+    # parser.add_argument("-4", "--label4", help="Channel 4 label")
+    # parser.add_argument("-n", "--note", help="Note label")
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
 
-    # # If no type is specified, auto-detect from the filename
+    # # # If no type is specified, auto-detect from the filename
+    # # if args.type is None:
+    # #     if args.filename is None:
+    # #         parser.error("Either a file type or a filename must be specified")
+    # #     args.type = os.path.splitext(args.filename)[1][1:]
+
+    # # EPM: Just default to png
     # if args.type is None:
-    #     if args.filename is None:
-    #         parser.error("Either a file type or a filename must be specified")
-    #     args.type = os.path.splitext(args.filename)[1][1:]
+    #     args.type = 'png'
+    # # EPM: default host
+    # if args.hostname is None:
+    #     args.hostname = IP_DS1104Z_DEFAULT_IP
 
-    # EPM: Just default to png
-    if args.type is None:
-        args.type = 'png'
-    # EPM: default host
-    if args.hostname is None:
-        args.hostname = IP_DS1104Z_DEFAULT_IP
+    # try:
+    #     args.type = FileType[args.type]
+    # except KeyError:
+    #     parser.error("Unknown file type: {}".format(args.type))
 
-    try:
-        args.type = FileType[args.type]
-    except KeyError:
-        parser.error("Unknown file type: {}".format(args.type))
-
-    run(args.hostname, args.filename, args.type, args)
+    # run(args.hostname, args.filename, args.type, args)
