@@ -26,7 +26,13 @@ import arrow
 import click
 
 # Local
-from Rigol_functions import *
+from Rigol_functions import (
+    log_running_python_versions,
+    command,
+    tmc_header_bytes,
+    expected_data_bytes,
+    expected_buff_bytes,
+)
 from telnetlib_receive_all import Telnet
 
 __version__ = 'v2.0.0u'
@@ -62,7 +68,6 @@ __author__ = 'RoGeorge'
 # TODO: Add browse and custom filename selection
 # TODO: Create executable distributions
 #
-
 
 
 # Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -118,6 +123,7 @@ def test_ping(hostname):
         print("Check network cables and settings.")
         print("You should be able to ping the oscilloscope.")
 
+
 @click.command()
 @click.argument('hostname', required=False, default=IP_DS1104Z_DEFAULT_IP)
 @click.argument('filename', required=False)
@@ -135,9 +141,6 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
     filename: Name of output file.
 
     """
-    # TODO: Move defaults into a config file
-    # print(hostname, filename, filetype, note, label1, label2, label3, label4)
-    # return
 
     try:
         filetype = FileType[file_extension]
