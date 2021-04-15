@@ -75,16 +75,10 @@ __author__ = 'RoGeorge'
 path_to_save = os.getcwd() + '/'
 
 CONFIG_FILENAME = 'config.json'
-
-# Rigol/LXI specific constants
-port = 5555
-
-big_wait = 10
-smallWait = 1
-
-company = 0
-model = 1
-serial = 2
+RIGOL_TELNET_PORT = 5555
+TELNET_TIMEOUT_SECONDS = 1
+INDEX_COMPANY = 0
+INDEX_MODEL = 1
 
 
 # Read/verify file type
@@ -171,7 +165,7 @@ def main(
     # Open a modified telnet session
     # The default telnetlib drops 0x00 characters,
     #   so a modified library 'telnetlib_receive_all' is used instead
-    tn = Telnet(hostname, port)
+    tn = Telnet(hostname, RIGOL_TELNET_PORT)
     instrument_id = command(tn, '*IDN?').decode()  # ask for instrument ID
 
     # Check if instrument is set to accept LAN commands
@@ -184,11 +178,11 @@ def main(
     # Check if instrument is indeed a Rigol DS1000Z series
     id_fields = instrument_id.split(",")
     if (
-        (id_fields[company] != "RIGOL TECHNOLOGIES")
-        or (id_fields[model][:3] != "DS1")
-        or (id_fields[model][-1] != "Z")
+        (id_fields[INDEX_COMPANY] != "RIGOL TECHNOLOGIES")
+        or (id_fields[INDEX_MODEL][:3] != "DS1")
+        or (id_fields[INDEX_MODEL][-1] != "Z")
     ):
-        print(f'Found instrument model "{id_fields[model]}" from "{id_fields[company]}"')
+        print(f'Found instrument model "{id_fields[INDEX_MODEL]}" from "{id_fields[INDEX_COMPANY]}"')
         print(f'WARNING: No Rigol from series DS1000Z found at {hostname}\n')
         print()
         typed = raw_input('ARE YOU SURE YOU WANT TO CONTINUE? (No/Yes):')
@@ -201,7 +195,7 @@ def main(
     timestamp_time = time.localtime()
     timestamp = time.strftime("%Y-%m-%d_%H.%M.%S", timestamp_time)
     if filename is None:
-        filename = f"{path_to_save}{id_fields[model]}_{timestamp}.{filetype.name}"
+        filename = f"{path_to_save}{id_fields[INDEX_MODEL]}_{timestamp}.{filetype.name}"
         if note is not None:
             filename_base = note.replace(' ', '_')
             suffix = ''
@@ -232,7 +226,7 @@ def main(
                 + str(expectedBuffLen)
                 + " expected 'buff' bytes.)"
             )
-            tmp = tn.read_until(b"\n", smallWait)
+            tmp = tn.read_until(b"\n", TELNET_TIMEOUT_SECONDS)
             if len(tmp) == 0:
                 break
             buff += tmp
@@ -317,11 +311,11 @@ def main(
             while buffChunk[-1] != "\n":
                 logging.warning(
                     "The data transfer did not complete in the expected time of "
-                    + str(smallWait)
+                    + str(TELNET_TIMEOUT_SECONDS)
                     + " second(s)."
                 )
 
-                tmp = tn.read_until(b"\n", smallWait)
+                tmp = tn.read_until(b"\n", TELNET_TIMEOUT_SECONDS)
                 if len(tmp) == 0:
                     break
                 buffChunk += tmp
