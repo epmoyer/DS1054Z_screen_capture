@@ -167,7 +167,7 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
         or (id_fields[model][:3] != "DS1")
         or (id_fields[model][-1] != "Z")
     ):
-        print("Found instrument model '{}' from '{}'".format(id_fields[model], id_fields[company]))
+        print(f"Found instrument model '{id_fields[model]}' from '{id_fields[company]}'")
         print("WARNING: No Rigol from series DS1000Z found at", hostname)
         print()
         typed = raw_input("ARE YOU SURE YOU WANT TO CONTINUE? (No/Yes):")
@@ -235,7 +235,7 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
         # Write raw data to file
         with open(filename, 'wb') as f:
             f.write(buff)
-        print('Saved raw data to "{}"'.format(filename))
+        print(f'Saved raw data to "{filename}"')
 
         # -------------------------------
         # Replace Rigol logo with timestamp
@@ -399,39 +399,3 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
 
 if __name__ == "__main__":
     main()
-    
-    # parser = argparse.ArgumentParser(
-    #     description="Take screen captures from" " DS1000Z-series oscilloscopes"
-    # )
-    # parser.add_argument(
-    #     "-t", "--type", choices=FileType.__members__, help="Optional type of file to save"
-    # )
-    # parser.add_argument("hostname", nargs="?", help="Hostname or IP address of the oscilloscope")
-    # parser.add_argument("filename", nargs="?", help="Optional name of output file")
-    # parser.add_argument("-1", "--label1", help="Channel 1 label")
-    # parser.add_argument("-2", "--label2", help="Channel 2 label")
-    # parser.add_argument("-3", "--label3", help="Channel 3 label")
-    # parser.add_argument("-4", "--label4", help="Channel 4 label")
-    # parser.add_argument("-n", "--note", help="Note label")
-
-    # args = parser.parse_args()
-
-    # # # If no type is specified, auto-detect from the filename
-    # # if args.type is None:
-    # #     if args.filename is None:
-    # #         parser.error("Either a file type or a filename must be specified")
-    # #     args.type = os.path.splitext(args.filename)[1][1:]
-
-    # # EPM: Just default to png
-    # if args.type is None:
-    #     args.type = 'png'
-    # # EPM: default host
-    # if args.hostname is None:
-    #     args.hostname = IP_DS1104Z_DEFAULT_IP
-
-    # try:
-    #     args.type = FileType[args.type]
-    # except KeyError:
-    #     parser.error("Unknown file type: {}".format(args.type))
-
-    # run(args.hostname, args.filename, args.type, args)
