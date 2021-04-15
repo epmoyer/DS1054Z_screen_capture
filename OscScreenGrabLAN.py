@@ -35,8 +35,6 @@ from Rigol_functions import (
 from telnetlib_receive_all import Telnet
 
 __version__ = 'v2.0.0u'
-# Added TMC Blockheader decoding
-# Added possibility to manually allow run for scopes other then DS1000Z
 __author__ = 'RoGeorge'
 
 
@@ -352,10 +350,6 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
         - Note ("-n" option)
         - Signal labels (options "-1", "-2", "-3", "-4")
     """
-
-    # -------------------------------
-    # Replace Rigol logo with timestamp
-    # -------------------------------
     print("Annotating image...")
     image = Image.open(filename)
     draw = ImageDraw.Draw(image)
