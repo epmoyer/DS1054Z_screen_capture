@@ -70,21 +70,6 @@ __author__ = 'RoGeorge'
 #
 
 
-# Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-# EPM: Users may call this app from a different directory, so need to figure out the
-#      absolute path to the log file in this module's directory.
-log_path = Path(__file__).parent / Path(os.path.basename(sys.argv[0]) + '.log')
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filename=log_path,
-    filemode='w',
-)
-
-logging.info("***** New run started...")
-logging.info("OS Platform: " + str(platform.uname()))
-log_running_python_versions()
-
 # Update the next lines for your own default settings:
 # path_to_save = "captures/"
 path_to_save = os.getcwd() + '/'
@@ -109,9 +94,6 @@ class FileType(Enum):
     csv = auto()
 
 
-
-
-
 @click.command()
 @click.argument('hostname', required=False, default=None)
 @click.argument('filename', required=False)
@@ -121,8 +103,26 @@ class FileType(Enum):
 @click.option('-2', '--label2', help='Channel 2 label.')
 @click.option('-3', '--label3', help='Channel 3 label.')
 @click.option('-4', '--label4', help='Channel 4 label.')
-@click.option('-r', '--raw', 'enable_raw', is_flag=True, help='Save raw image (with no annotation or de-cluttering)')
-def main(hostname, filename, file_extension, note, label1, label2, label3, label4, enable_raw):
+@click.option(
+    '-r',
+    '--raw',
+    'enable_raw',
+    is_flag=True,
+    help='Save raw image (with no annotation or de-cluttering)',
+)
+@click.option('-d', '--debug', 'enable_debug', is_flag=True, help='Enable debug logging.')
+def main(
+    hostname,
+    filename,
+    file_extension,
+    note,
+    label1,
+    label2,
+    label3,
+    label4,
+    enable_raw,
+    enable_debug,
+):
     """Take screen captures from DS1000Z-series oscilloscopes.
 
     \b
@@ -132,6 +132,25 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
 
     """
 
+    # -----------------------------
+    # Initialize Logging
+    # -----------------------------
+    # Users may call this app from a different directory, so we will figure out the
+    # absolute path to the log file in this module's directory.
+    log_path = Path(__file__).parent / Path(os.path.basename(sys.argv[0]) + '.log')
+    logging.basicConfig(
+        level=logging.DEBUG if enable_debug else logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        filename=log_path,
+        filemode='w',
+    )
+    logging.info("***** New run started...")
+    logging.info("OS Platform: " + str(platform.uname()))
+    log_running_python_versions()
+
+    # -----------------------------
+    # Wrangle command line arguments
+    # -----------------------------
     try:
         filetype = FileType[file_extension]
     except KeyError:
@@ -143,6 +162,9 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
     if hostname in (None, 'default'):
         hostname = config['default_hostname']
 
+    # -----------------------------
+    # Begin
+    # -----------------------------
     if not test_ping(hostname):
         sys.exit()
 
@@ -150,14 +172,14 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
     # The default telnetlib drops 0x00 characters,
     #   so a modified library 'telnetlib_receive_all' is used instead
     tn = Telnet(hostname, port)
-    instrument_id = command(tn, "*IDN?").decode()  # ask for instrument ID
+    instrument_id = command(tn, '*IDN?').decode()  # ask for instrument ID
 
     # Check if instrument is set to accept LAN commands
     if instrument_id == "command error":
-        print("Instrument reply:", instrument_id)
-        print("Check the oscilloscope settings.")
-        print("Utility -> IO Setting -> RemoteIO -> LAN must be ON")
-        sys.exit("ERROR")
+        print(f'Instrument reply: {instrument_id}')
+        print('Check the oscilloscope settings.')
+        print('Utility -> IO Setting -> RemoteIO -> LAN must be ON.')
+        sys.exit('ERROR')
 
     # Check if instrument is indeed a Rigol DS1000Z series
     id_fields = instrument_id.split(",")
@@ -166,14 +188,14 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
         or (id_fields[model][:3] != "DS1")
         or (id_fields[model][-1] != "Z")
     ):
-        print(f"Found instrument model '{id_fields[model]}' from '{id_fields[company]}'")
-        print("WARNING: No Rigol from series DS1000Z found at", hostname)
+        print(f'Found instrument model "{id_fields[model]}" from "{id_fields[company]}"')
+        print(f'WARNING: No Rigol from series DS1000Z found at {hostname}\n')
         print()
-        typed = raw_input("ARE YOU SURE YOU WANT TO CONTINUE? (No/Yes):")
+        typed = raw_input('ARE YOU SURE YOU WANT TO CONTINUE? (No/Yes):')
         if typed != 'Yes':
             sys.exit('Nothing done. Bye!')
 
-    print("Instrument ID:", instrument_id)
+    print(f'Instrument ID: "{instrument_id}".')
 
     # Prepare filename as C:\MODEL_SERIAL_YYYY-MM-DD_HH.MM.SS
     timestamp_time = time.localtime()
@@ -234,11 +256,10 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
         # Write raw data to file
         with open(filename, 'wb') as f:
             f.write(buff)
-        print(f'Saved raw data to "{filename}"')
+        print(f'Saved raw image to "{filename}".')
 
         if not enable_raw:
             annotate(filename, timestamp_time, note, label1, label2, label3, label4)
-        
 
     # TODO: Change WAV:FORM from ASC to BYTE
     elif filetype is FileType.csv:
@@ -344,9 +365,10 @@ def main(hostname, filename, file_extension, note, label1, label2, label3, label
         scr_file.write(csv_buff)
         scr_file.close()
 
-        print("Saved file:", "'" + filename + "'")
+        print(f'Saved file: "{filename}".')
 
     tn.close()
+
 
 def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
     """Annotate and declutter image.
@@ -414,6 +436,7 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
     image.save(filename)
     print("Done.")
 
+
 # Check network response (ping)
 def test_ping(hostname):
     """Ping hostname to see if it responds.
@@ -436,6 +459,7 @@ def test_ping(hostname):
         )
         return False
     return True
+
 
 if __name__ == "__main__":
     main()
