@@ -121,13 +121,13 @@ def test_ping(hostname):
 @click.command()
 @click.argument('hostname', required=False, default=IP_DS1104Z_DEFAULT_IP)
 @click.argument('filename', required=False)
-@click.option('-t', '--type', 'filetype', default='png', help='Type of file to save.')
+@click.option('-t', '--type', 'file_extension', default='png', help='Type of file to save.')
 @click.option('-n', '--note', help='Note label.')
 @click.option('-1', '--label1', help='Channe 1 label.')
 @click.option('-2', '--label2', help='Channe 2 label.')
 @click.option('-3', '--label3', help='Channe 3 label.')
 @click.option('-4', '--label4', help='Channe 4 label.')
-def main(hostname, filename, filetype, note, label1, label2, label3, label4):
+def main(hostname, filename, file_extension, note, label1, label2, label3, label4):
     """Take screen captures from DS1000Z-series oscilloscopes.
 
     \b
@@ -138,6 +138,12 @@ def main(hostname, filename, filetype, note, label1, label2, label3, label4):
     # TODO: Move defaults into a config file
     # print(hostname, filename, filetype, note, label1, label2, label3, label4)
     # return
+
+    try:
+        filetype = FileType[file_extension]
+    except KeyError:
+        print(f"Unknown file type: {file_extension}")
+        return
 
     test_ping(hostname)
 
@@ -175,8 +181,8 @@ def main(hostname, filename, filetype, note, label1, label2, label3, label4):
     timestamp = time.strftime("%Y-%m-%d_%H.%M.%S", timestamp_time)
     if filename is None:
         filename = f"{path_to_save}{id_fields[model]}_{timestamp}.{filetype.name}"
-        if args.note is not None:
-            filename_base = args.note.replace(' ', '_')
+        if note is not None:
+            filename_base = note.replace(' ', '_')
             suffix = ''
             for i in range(20):
                 suffix = '' if i == 0 else f'_{i+1}'
@@ -265,11 +271,11 @@ def main(hostname, filename, filetype, note, label1, label2, label3, label4):
         font = ImageFont.truetype(str(font_path), 16)
         location = [40, 1]
         labels = (
-            (args.note, "#b0b0b0"),
-            (args.label1, "#F7FA52"),
-            (args.label2, "#00E1DD"),
-            (args.label3, "#DD00DD"),
-            (args.label4, "#007FF5"),
+            (note, "#b0b0b0"),
+            (label1, "#F7FA52"),
+            (label2, "#00E1DD"),
+            (label3, "#DD00DD"),
+            (label4, "#007FF5"),
         )
         for index, item in enumerate(labels):
             label_text, color = item
