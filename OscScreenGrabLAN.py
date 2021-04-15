@@ -70,10 +70,6 @@ __author__ = 'RoGeorge'
 #
 
 
-# Update the next lines for your own default settings:
-# path_to_save = "captures/"
-path_to_save = os.getcwd() + '/'
-
 CONFIG_FILENAME = 'config.json'
 RIGOL_TELNET_PORT = 5555
 TELNET_TIMEOUT_SECONDS = 1
@@ -155,6 +151,10 @@ def main(
         config = json.load(file)
     if hostname in (None, 'default'):
         hostname = config['default_hostname']
+    
+    save_path = config['default_save_path']
+    if save_path == '$cwd':
+        save_path = os.getcwd() + '/'
 
     # -----------------------------
     # Begin
@@ -189,13 +189,13 @@ def main(
         if typed != 'Yes':
             sys.exit('Nothing done. Bye!')
 
-    print(f'Instrument ID: "{instrument_id}".')
+    print(f'Instrument ID: "{instrument_id.strip()}".')
 
     # Prepare filename as C:\MODEL_SERIAL_YYYY-MM-DD_HH.MM.SS
     timestamp_time = time.localtime()
     timestamp = time.strftime("%Y-%m-%d_%H.%M.%S", timestamp_time)
     if filename is None:
-        filename = f"{path_to_save}{id_fields[INDEX_MODEL]}_{timestamp}.{filetype.name}"
+        filename = f"{save_path}{id_fields[INDEX_MODEL]}_{timestamp}.{filetype.name}"
         if note is not None:
             filename_base = note.replace(' ', '_')
             suffix = ''
