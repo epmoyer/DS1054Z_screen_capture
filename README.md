@@ -10,7 +10,6 @@ The original repo has not been touched in 4 years and appears to be languishing.
     - I have not tested on Windows. The current code base is running on OSX with Python 3.8 using a Rigol DS1054Z.
 - **TODO:**
     - The original project contained a long list of "TODO"s in `OscScreenGrabLAN.py`.  I have not reviewed them or assessed my likelihood of taking them on.
-    - Add option to disable all image modifications.
     - Add license file for the annotation font (`Inconsolata-SemiBold.ttf`, from Google fonts).
     - General code cleanup / refactoring.
 
