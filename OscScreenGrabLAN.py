@@ -40,34 +40,6 @@ __version__ = 'v2.0.0u'
 # Added possibility to manually allow run for scopes other then DS1000Z
 __author__ = 'RoGeorge'
 
-#
-# TODO: Write all SCPI commands in their short name, with capitals
-# TODO: Add ignore instrument model switch instead of asking
-#
-# TODO: Detect if the scope is in RUN or in STOP mode (looking at the length of data extracted)
-# TODO: Add logic for 1200/mdep points to avoid displaying the 'Invalid Input!' message
-# TODO: Add message for csv data points: mdep (all) or 1200 (screen), depending on RUN/STOP state, MATH and WAV:MODE
-# TODO: Add STOP scope switch
-#
-# TODO: Add debug switch
-# TODO: Clarify info, warning, error, debug and print messages
-#
-# TODO: Add automated version increase
-#
-# TODO: Extract all memory datapoints. For the moment, CSV is limited to the displayed 1200 datapoints.
-# TODO: Use arrays instead of strings and lists for csv mode.
-#
-# TODO: variables/functions name refactoring
-# TODO: Fine tune maximum chunk size request
-# TODO: Investigate scaling. Sometimes 3.0e-008 instead of expected 3.0e-000
-# TODO: Add timestamp and mark the trigger point as t0
-# TODO: Use channels label instead of chan1, chan2, chan3, chan4, math
-# TODO: Add command line parameters file path
-# TODO: Speed-up the transfer, try to replace Telnet with direct TCP
-# TODO: Add GUI
-# TODO: Add browse and custom filename selection
-# TODO: Create executable distributions
-#
 
 CONFIG_FILENAME = 'config.json'
 RIGOL_TELNET_PORT = 5555
