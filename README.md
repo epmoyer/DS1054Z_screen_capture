@@ -16,28 +16,22 @@ The original repo has not been touched in 4 years and appears to be languishing.
 Usage:
 ```
 $ ./OscScreenGrabLAN.py --help
-usage: OscScreenGrabLAN.py [-h] [-t {png,bmp,csv}] [-1 LABEL1] [-2 LABEL2] [-3 LABEL3] [-4 LABEL4] [-n NOTE]
-                           [hostname] [filename]
+Usage: OscScreenGrabLAN.py [OPTIONS] [HOSTNAME] [FILENAME]
 
-Take screen captures from DS1000Z-series oscilloscopes
+  Take screen captures from DS1000Z-series oscilloscopes.
 
-positional arguments:
-  hostname              Hostname or IP address of the oscilloscope
-  filename              Optional name of output file
+  hostname: Hostname or IP address of the oscilloscope.
+  filename: Name of output file.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -t {png,bmp,csv}, --type {png,bmp,csv}
-                        Optional type of file to save
-  -1 LABEL1, --label1 LABEL1
-                        Channel 1 label
-  -2 LABEL2, --label2 LABEL2
-                        Channel 2 label
-  -3 LABEL3, --label3 LABEL3
-                        Channel 3 label
-  -4 LABEL4, --label4 LABEL4
-                        Channel 4 label
-  -n NOTE, --note NOTE  Note label
+Options:
+  -t, --type TEXT    Type of file to save.
+  -n, --note TEXT    Note label.
+  -1, --label1 TEXT  Channe 1 label.
+  -2, --label2 TEXT  Channe 2 label.
+  -3, --label3 TEXT  Channe 3 label.
+  -4, --label4 TEXT  Channe 4 label.
+  -r, --raw          Save raw image (with no annotation or decluttering)
+  --help             Show this message and exit.
 
 $
 ```
