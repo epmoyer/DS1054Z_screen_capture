@@ -88,7 +88,6 @@ log_running_python_versions()
 # Update the next lines for your own default settings:
 # path_to_save = "captures/"
 path_to_save = os.getcwd() + '/'
-IP_DS1104Z_DEFAULT_IP = "169.254.247.73"
 
 CONFIG_FILENAME = 'config.json'
 
@@ -114,7 +113,7 @@ class FileType(Enum):
 
 
 @click.command()
-@click.argument('hostname', required=False, default=IP_DS1104Z_DEFAULT_IP)
+@click.argument('hostname', required=False, default=None)
 @click.argument('filename', required=False)
 @click.option('-t', '--type', 'file_extension', default='png', help='Type of file to save.')
 @click.option('-n', '--note', help='Note label.')
@@ -367,7 +366,7 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
     # -------------------------------
     # Replace Rigol logo with timestamp
     # -------------------------------
-    print("Stripping logo...")
+    print("Annotating image...")
     image = Image.open(filename)
     draw = ImageDraw.Draw(image)
     # Users may call this app from a different directory, so need to figure out the
