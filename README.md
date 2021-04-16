@@ -4,19 +4,20 @@ I have forked the [original repo](https://github.com/RoGeorge/DS1054Z_screen_cap
 The original repo has not been touched in 4 years and appears to be languishing.
 
 - **Current state:**
+    - The project is highly functional, but the documentation has not yet been fully updated.
+    - Image annotation has been added and is working (see section below).
     - The project now supports Python 3.
     - I have no plans to support or test with Python 2.
-    - Image annotation has been added and is working (see section below).
     - I have not tested on Windows. The current code base is running on OSX with Python 3.8 using a Rigol DS1054Z.
 - **TODO:**
+    - Update "User Manual" section of README.
     - The original project contained a long list of "TODO"s in `OscScreenGrabLAN.py`.  I have not reviewed them or assessed my likelihood of taking them on.
-    - Add license file for the annotation font (`Inconsolata-SemiBold.ttf`, from Google fonts).
     - General code cleanup / refactoring.
 
 Usage:
 ```
 $ ./OscScreenGrabLAN.py --help
-Usage: OscScreenGrabLAN.py [OPTIONS] [HOSTNAME] filename
+Usage: OscScreenGrabLAN.py [OPTIONS] [HOSTNAME] [OUTPUT_FILENAME]
 
   Take screen captures from DS1000Z-series oscilloscopes.
 

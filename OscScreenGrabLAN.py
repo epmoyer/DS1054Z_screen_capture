@@ -47,7 +47,7 @@ INDEX_MODEL = 1
 
 @click.command()
 @click.argument('hostname', required=False, default=None)
-@click.argument('output_filename', metavar='filename', required=False)
+@click.argument('output_filename', required=False, default=None)
 @click.option('-n', '--note', help='Note label.')
 @click.option('-1', '--label1', help='Channel 1 label.')
 @click.option('-2', '--label2', help='Channel 2 label.')
