@@ -47,7 +47,7 @@ INDEX_MODEL = 1
 
 @click.command()
 @click.argument('hostname', required=False, default=None)
-@click.argument('filename', required=False)
+@click.argument('output_filename',  metavar='filename', required=False)
 @click.option('-n', '--note', help='Note label.')
 @click.option('-1', '--label1', help='Channel 1 label.')
 @click.option('-2', '--label2', help='Channel 2 label.')
@@ -60,27 +60,21 @@ INDEX_MODEL = 1
     is_flag=True,
     help='Save raw image (with no annotation or de-cluttering)',
 )
-@click.option('-d', '--debug', 'enable_debug', is_flag=True, help='Enable debug logging.')
 @click.option('-c', '--csv', 'save_as_csv', is_flag=True, help='Save scope data as csv.')
+@click.option('-d', '--debug', 'enable_debug', is_flag=True, help='Enable debug logging.')
 def main(
-    hostname,
-    filename,
-    note,
-    label1,
-    label2,
-    label3,
-    label4,
-    enable_raw,
-    enable_debug,
-    save_as_csv,
+    hostname, output_filename, note, label1, label2, label3, label4, enable_raw, enable_debug, save_as_csv,
 ):
     """Take screen captures from DS1000Z-series oscilloscopes.
 
     \b
-    hostname: Hostname or IP address of the oscilloscope.  If not supplied (or the word
-              "default") then the value of "default_hostname" from config.json will be used.
+    hostname: Hostname or IP address of the oscilloscope.  If not supplied
+              (or the word "default") then the value of "default_hostname"
+              from config.json will be used.
     filename: Name of output file.
 
+    Passing the --csv flag will save the capture samples as a CSV file.
+    If the --csv flag is NOT passed, then a screenshot (.png) will be saved.
     """
 
     # -----------------------------
@@ -88,7 +82,8 @@ def main(
     # -----------------------------
     # Users may call this app from a different directory, so we will figure out the
     # absolute path to the log file in this module's directory.
-    log_path = Path(__file__).parent / Path(os.path.basename(sys.argv[0]) + '.log')
+    module_path = Path(__file__).parent
+    log_path = module_path / Path(os.path.basename(sys.argv[0]) + '.log')
     logging.basicConfig(
         level=logging.DEBUG if enable_debug else logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
@@ -102,14 +97,21 @@ def main(
     # -----------------------------
     # Wrangle command line arguments
     # -----------------------------
-    with open(CONFIG_FILENAME, 'r') as file:
+    with open(module_path / Path(CONFIG_FILENAME), 'r') as file:
         config = json.load(file)
     if hostname in (None, 'default'):
         hostname = config['default_hostname']
 
-    save_path = config['default_save_path']
-    if save_path == '$cwd':
-        save_path = os.getcwd() + '/'
+    output_dir_path = None
+    if output_filename:
+        output_dir_path, output_filename = extract_parent(output_filename)
+    if output_dir_path is None:
+        output_dir_path = (
+            Path.cwd()
+            if config['default_save_path'] == '$cwd'
+            else Path(config['default_save_path'])
+        )
+    logging.debug(f'Preliminary output target: {output_dir_path=}, {output_filename=}')
 
     # -----------------------------
     # Connect to scope
@@ -151,25 +153,25 @@ def main(
     # Determine output filename
     # -----------------------------
     timestamp_time = time.localtime()
-    if filename is None:
+    if output_filename is None:
         suffix = 'csv' if save_as_csv else 'png'
-        filename = build_save_filename(
-            save_path, timestamp_time, id_fields[INDEX_MODEL], suffix, note
-        )
+        output_filename = build_save_filename(timestamp_time, id_fields[INDEX_MODEL], suffix, note)
+    output_path = output_dir_path / Path(output_filename)
+    logging.debug(f'Final output target: {output_path}')
 
     # -----------------------------
     # Capture
     # -----------------------------
     if save_as_csv:
-        capture_csv_data(filename, telnet)
+        capture_csv_data(output_path, telnet)
     else:
-        capture_screenshot(filename, telnet)
+        capture_screenshot(output_path, telnet)
         if not enable_raw:
-            annotate(filename, timestamp_time, note, label1, label2, label3, label4)
+            annotate(output_path, timestamp_time, note, label1, label2, label3, label4)
     telnet.close()
 
 
-def capture_screenshot(filename, telnet):
+def capture_screenshot(output_path, telnet):
     # Ask for an oscilloscope display print screen
     print("Receiving screen capture...")
     buff = command(telnet, ":DISP:DATA? ON,OFF,PNG")
@@ -205,12 +207,12 @@ def capture_screenshot(filename, telnet):
     buff = buff[tmcHeaderLen : tmcHeaderLen + expectedDataLen]
 
     # Write raw data to file
-    with open(filename, 'wb') as f:
+    with open(output_path, 'wb') as f:
         f.write(buff)
-    print(f'Saved raw image to "{filename}".')
+    print(f'Saved raw image to "{output_path}".')
 
 
-def capture_csv_data(filename, telnet):
+def capture_csv_data(output_path, telnet):
     # Put the scope in STOP mode - for the moment, deal with it by manually stopping the scope
     # TODO: Add command line switch and code logic for 1200 vs ALL memory data points
     # TODO: Change WAV:FORM from ASC to BYTE
@@ -302,7 +304,7 @@ def capture_csv_data(filename, telnet):
             point_str = point.decode("utf-8")
             current_row += 1
             if csv_first_column:
-                csv_buff += point_str  + os.linesep
+                csv_buff += point_str + os.linesep
             else:
                 if current_row < csv_rows:
                     csv_buff += str(csv_buff_list[current_row]) + "," + point_str + os.linesep
@@ -310,17 +312,17 @@ def capture_csv_data(filename, telnet):
                     csv_buff += "," + point_str + os.linesep
 
     # Save data as CSV
-    scr_file = open(filename, "w")
+    scr_file = open(output_path, "w")
     scr_file.write(csv_buff)
     scr_file.close()
 
-    print(f'Saved file: "{filename}".')
+    print(f'Saved file: "{output_path}".')
 
 
-def build_save_filename(save_path, timestamp_time, scope_model, suffix, note):
+def build_save_filename(timestamp_time, scope_model, suffix, note):
     # Preapeare filename as: MODEL_SERIAL_YYYY-MM-DD_HH.MM.SS
     timestamp = time.strftime("%Y-%m-%d_%H.%M.%S", timestamp_time)
-    filename = f"{save_path}{scope_model}_{timestamp}.{suffix}"
+    filename = f"{scope_model}_{timestamp}.{suffix}"
     if note is None:
         return filename
 
@@ -335,7 +337,7 @@ def build_save_filename(save_path, timestamp_time, scope_model, suffix, note):
     return filename
 
 
-def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
+def annotate(output_path, timestamp_time, note, label1, label2, label3, label4):
     """Annotate and declutter image.
 
     - The following image "clutter" is automatically removed:
@@ -350,7 +352,7 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
         - Signal labels (options "-1", "-2", "-3", "-4")
     """
     print("Annotating image...")
-    image = Image.open(filename)
+    image = Image.open(output_path)
     draw = ImageDraw.Draw(image)
     # Users may call this app from a different directory, so need to figure out the
     # absolute path to the font file in this module's directory.
@@ -394,8 +396,31 @@ def annotate(filename, timestamp_time, note, label1, label2, label3, label4):
             location[1] += 18  # Line spacing
     image = image.rotate(-90, expand=True)  # Clockwise
 
-    image.save(filename)
+    image.save(output_path)
     print("Done.")
+
+
+def extract_parent(filename):
+    """Extract the parent path from a filename, if one EXPLICITLY exists.
+
+    Examples:
+        "foo.png"             ==> (None "foo.png")
+        "./foo.png"           ==> (Path("./"), "foo.png")
+        "/Users/John/foo.png" ==> (Path("/Users/John/"), "foo.png")
+
+    Args:
+        filename: A string conaining a filename with or without path information.
+
+    Returns:
+        A tuple of fhe form (parent, filename).
+    """
+    parent = Path(filename).parent
+    filename_raw = Path(filename).name
+    if filename == filename_raw:
+        # No explicit path (e.g. "./" was given)
+        return None, filename
+    # An explicit path (e.g. "./" was given)
+    return parent, filename_raw
 
 
 def test_ping(hostname):
