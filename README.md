@@ -16,28 +16,34 @@ The original repo has not been touched in 4 years and appears to be languishing.
 Usage:
 ```
 $ ./OscScreenGrabLAN.py --help
-Usage: OscScreenGrabLAN.py [OPTIONS] [HOSTNAME] [FILENAME]
+Usage: OscScreenGrabLAN.py [OPTIONS] [HOSTNAME] filename
 
   Take screen captures from DS1000Z-series oscilloscopes.
 
-  hostname: Hostname or IP address of the oscilloscope.
+  hostname: Hostname or IP address of the oscilloscope.  If not supplied
+            (or the word "default") then the value of "default_hostname"
+            from config.json will be used.
   filename: Name of output file.
 
+  Passing the --csv flag will save the capture samples as a CSV file. If the
+  --csv flag is NOT passed, then a screenshot (.png) will be saved.
+
 Options:
-  -t, --type TEXT    Type of file to save.
   -n, --note TEXT    Note label.
   -1, --label1 TEXT  Channel 1 label.
   -2, --label2 TEXT  Channel 2 label.
   -3, --label3 TEXT  Channel 3 label.
   -4, --label4 TEXT  Channel 4 label.
   -r, --raw          Save raw image (with no annotation or de-cluttering)
+  -c, --csv          Save scope data as csv.
+  -d, --debug        Enable debug logging.
   --help             Show this message and exit.
 
 $
 ```
 # DS1054Z_screen_capture
 
-'OscScreenGrabLAN.py' is a Python script that captures
+`OscScreenGrabLAN.py` is a Python script that captures
 whatever is displayed on the screen of a Rigol DS1000Z series oscilloscope.
 
 It can save data as a WYSIWYG (What You See Is What You Get) picture of the oscilloscope screen,
@@ -114,10 +120,17 @@ Usage examples:
     - Note (`-n` option)
     - Signal Names (options `-1`, `-2`, `-3`, `-4`)
 
-**TODO:**
-- Add option to suppress all image modifications (in case one wants to capture the "raw" screen, meus and all).
-
 ### Example Annotation
 `OscScreenGrabLAN.py -1 TEST_SIGNAL_1 -2 TEST_SIGNAL_2 -3 TEST_SIGNAL_3 -4 TEST_SIGNAL_4 -n "Example Annotated Capture"`
 
 ![](captures/Example_Annotated_Capture.png)
+
+## Licenses
+### Source
+GPL
+### Font
+The font [Inconsolata-SemiBold.ttf](https://fonts.google.com/specimen/Inconsolata#about) comes from Google Fonts, and is licensed under the [Open Font License](https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL).
+
+You can use it freely in your products & projects - print or digital, commercial or otherwise. However, you can't sell the font on its own.
+
+This isn't legal advice, please consider consulting a lawyer and see the full license for all details.
