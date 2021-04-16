@@ -8,10 +8,10 @@ The original repo has not been touched in 4 years and appears to be languishing.
     - Image annotation has been added and is working (see section below).
     - The project now supports Python 3.
     - I have no plans to support or test with Python 2.
-    - I have not tested on Windows. The current code base is running on OSX with Python 3.8 using a Rigol DS1054Z.
+    - Tested on MacOS with Python 3.8 using a Rigol DS1054Z.
+    - Tested on Windows 10 with Python 3.8 using a Rigol DS1054Z.
 - **TODO:**
     - Update "User Manual" section of README.
-    - The original project contained a long list of "TODO"s in `OscScreenGrabLAN.py`.  I have not reviewed them or assessed my likelihood of taking them on.
     - General code cleanup / refactoring.
 
 Usage:
@@ -55,7 +55,7 @@ to the oscilloscope, using the LXI (LAN-based eXtensions for Instrumentation) pr
 The computer and the oscilloscope are connected together by a LAN (Local Area Network).
 No USB (Universal Serial Bus), no VISA (Virtual Instrument Software Architecture),
 no IVI (Interchangeable Virtual Instrument) and no Rigol drivers are required.
-Python 2 is required. Python 3 is not supported.
+Python 3 is required. Python 2 is not supported.
 
 Tested with Windows 10, Python 2.7.12, pillow and Rigol DS1104Z (a fully upgraded DS1054Z oscilloscope).
 Tested with Linux Ubuntu 16.04.1, Python 2.7.12 and pillow.

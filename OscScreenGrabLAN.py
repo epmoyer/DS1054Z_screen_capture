@@ -18,6 +18,7 @@ import sys
 import time
 import json
 from pathlib import Path
+import textwrap
 
 # Library
 from PIL import Image, ImageDraw, ImageFont
@@ -472,16 +473,32 @@ def test_ping(hostname):
         command = ['ping', '-n', '1', hostname]
     else:
         command = ['ping', '-c', '1', hostname]
-    completed = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    if completed.returncode != 0:
+    result = subprocess.run(command, capture_output=True)
+    stdout_text = result.stdout.decode('utf-8')
+    
+    if result.returncode != 0:
         print(
             '\n'
-            f'WARNING! No response pinging "{hostname}"".\n'
+            f'ERROR: No response pinging "{hostname}".\n'
             'Check network cables and settings.\n'
             'You should be able to ping the oscilloscope.'
         )
+        logging.error(f'Ping of {hostname} failed.')
         return False
+    elif "Destination host unreachable" in stdout_text:
+        print(
+            '\n'
+            f'ERROR: Ping to "{hostname}" failed.\n'
+            f'Ping result:\n{textwrap.indent(stdout_text, "   ")}\n'
+            'Check network cables and settings.\n'
+            'You should be able to ping the oscilloscope.'
+        )
+        logging.error(f'Ping of {hostname} failed.')
+        return False
+
+    logging.info(f'Ping of {hostname} succeeded.')
+    logging.debug(f'{stdout_text=}')
+    logging.debug(f'{result.stderr=}')
     return True
 
 
