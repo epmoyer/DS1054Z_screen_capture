@@ -1,5 +1,4 @@
 {
     "default_hostname": "169.254.247.73",
-    "__default_save_path": "$cwd",
-    "default_save_path": "untracked/capture"
+    "default_save_path": "$cwd"
 }

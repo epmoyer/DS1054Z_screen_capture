@@ -47,7 +47,7 @@ INDEX_MODEL = 1
 
 @click.command()
 @click.argument('hostname', required=False, default=None)
-@click.argument('output_filename',  metavar='filename', required=False)
+@click.argument('output_filename', metavar='filename', required=False)
 @click.option('-n', '--note', help='Note label.')
 @click.option('-1', '--label1', help='Channel 1 label.')
 @click.option('-2', '--label2', help='Channel 2 label.')
@@ -63,7 +63,16 @@ INDEX_MODEL = 1
 @click.option('-c', '--csv', 'save_as_csv', is_flag=True, help='Save scope data as csv.')
 @click.option('-d', '--debug', 'enable_debug', is_flag=True, help='Enable debug logging.')
 def main(
-    hostname, output_filename, note, label1, label2, label3, label4, enable_raw, enable_debug, save_as_csv,
+    hostname,
+    output_filename,
+    note,
+    label1,
+    label2,
+    label3,
+    label4,
+    enable_raw,
+    enable_debug,
+    save_as_csv,
 ):
     """Take screen captures from DS1000Z-series oscilloscopes.
 
@@ -97,6 +106,22 @@ def main(
     # -----------------------------
     # Wrangle command line arguments
     # -----------------------------
+    extension_validation = (
+        (True, '.csv', 'csv data'),
+        (False, '.png', 'screenshot'),
+    )
+    for expect_save_as_csv, expect_suffix, capture_description in extension_validation:
+        if (
+            save_as_csv == expect_save_as_csv
+            and output_filename
+            and Path(output_filename).suffix != expect_suffix
+        ):
+            print(
+                f'ERROR: Output filename "{output_filename}" should have {expect_suffix}'
+                f' suffix when capturing {capture_description}'
+            )
+            sys.exit()
+
     with open(module_path / Path(CONFIG_FILENAME), 'r') as file:
         config = json.load(file)
     if hostname in (None, 'default'):
@@ -209,7 +234,7 @@ def capture_screenshot(output_path, telnet):
     # Write raw data to file
     with open(output_path, 'wb') as f:
         f.write(buff)
-    print(f'Saved raw image to "{output_path}".')
+    print(f'Saved raw image to "{humanize_path(output_path)}".')
 
 
 def capture_csv_data(output_path, telnet):
@@ -316,7 +341,7 @@ def capture_csv_data(output_path, telnet):
     scr_file.write(csv_buff)
     scr_file.close()
 
-    print(f'Saved file: "{output_path}".')
+    print(f'Saved file: "{humanize_path(output_path)}".')
 
 
 def build_save_filename(timestamp_time, scope_model, suffix, note):
@@ -421,6 +446,20 @@ def extract_parent(filename):
         return None, filename
     # An explicit path (e.g. "./" was given)
     return parent, filename_raw
+
+
+def humanize_path(path):
+    """Return path (as string) relative to the current working dir.
+
+    The goal is to provide a "human readable" path for display to a user.
+
+    - If the path is IN or BELOW the current working directory then return a RELATIVE path string.
+    - If the path is ABOVE the current working directory then return an ABSOLUTE path string.
+    """
+    relative_path = path.relative_to(Path.cwd())
+    if str(relative_path).startswith('..'):
+        return str(path)
+    return str(relative_path)
 
 
 def test_ping(hostname):
