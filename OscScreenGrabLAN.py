@@ -47,8 +47,8 @@ INDEX_MODEL = 1
 
 
 @click.command()
-@click.argument('hostname', required=False, default=None)
 @click.argument('output_filename', required=False, default=None)
+@click.option('-h', '--hostname', default=None, help='Oscilloscope IP address.')
 @click.option('-n', '--note', help='Note label.')
 @click.option('-1', '--label1', help='Channel 1 label.')
 @click.option('-2', '--label2', help='Channel 2 label.')
@@ -59,7 +59,7 @@ INDEX_MODEL = 1
     '--raw',
     'enable_raw',
     is_flag=True,
-    help='Save raw image (with no annotation or de-cluttering)',
+    help='Save raw image (with no annotation or de-cluttering).',
 )
 @click.option('-c', '--csv', 'save_as_csv', is_flag=True, help='Save scope data as csv.')
 @click.option('-d', '--debug', 'enable_debug', is_flag=True, help='Enable debug logging.')
@@ -78,10 +78,11 @@ def main(
     """Take screen captures from DS1000Z-series oscilloscopes.
 
     \b
-    hostname: Hostname or IP address of the oscilloscope.  If not supplied
-              (or the word "default") then the value of "default_hostname"
-              from config.json will be used.
-    filename: Name of output file.
+    OUTPUT_FILENAME: Name of output file to save.
+        - If not supplied then a filename will be auto-generated using the current date/time.
+        - If not supplied, and a note was supplied, and capturing a screenshot, then the
+          filename will be auto-generated from the note.  If the target filename exists, then
+          then the suffix "_n" (with increasing values of n) will be appended.
 
     Passing the --csv flag will save the capture samples as a CSV file.
     If the --csv flag is NOT passed, then a screenshot (.png) will be saved.

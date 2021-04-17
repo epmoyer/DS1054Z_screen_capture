@@ -9,9 +9,12 @@ This version is not yet released
 ### Changed
 - Support Python 3.
 - Discontinue support for Python 2.
+- Hostname is now an option.
 - Internal
     - Use click instead of argparse.
     - Refactor.
+### Removed
+- File type command line options (type is now exclusively `.png` for screenshot capture and `.csv` for data capture).
 ### Added
 - Image annotation:
     - The following image "clutter" is automatically removed:
@@ -24,6 +27,7 @@ This version is not yet released
     - The following annotations are optionally added:
         - Note (`-n` option).
         - Signal Names (options `-1`, `-2`, `-3`, `-4`).
+- Config file (`config.json`)
 
 ## 1.1.0 - 2017-01-04
 - As of 2021-04-15 this was the most recent version of the original project:

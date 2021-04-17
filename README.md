@@ -17,28 +17,30 @@ The original repo has not been touched in 4 years and appears to be languishing.
 Usage:
 ```
 $ ./OscScreenGrabLAN.py --help
-Usage: OscScreenGrabLAN.py [OPTIONS] [HOSTNAME] [OUTPUT_FILENAME]
+Usage: OscScreenGrabLAN.py [OPTIONS] [OUTPUT_FILENAME]
 
   Take screen captures from DS1000Z-series oscilloscopes.
 
-  hostname: Hostname or IP address of the oscilloscope.  If not supplied
-            (or the word "default") then the value of "default_hostname"
-            from config.json will be used.
-  filename: Name of output file.
+  OUTPUT_FILENAME: Name of output file to save.
+      - If not supplied then a filename will be auto-generated using the current date/time.
+      - If not supplied, and a note was supplied, and capturing a screenshot, then the
+        filename will be auto-generated from the note.  If the target filename exists, then
+        then the suffix "_n" (with increasing values of n) will be appended.
 
   Passing the --csv flag will save the capture samples as a CSV file. If the
   --csv flag is NOT passed, then a screenshot (.png) will be saved.
 
 Options:
-  -n, --note TEXT    Note label.
-  -1, --label1 TEXT  Channel 1 label.
-  -2, --label2 TEXT  Channel 2 label.
-  -3, --label3 TEXT  Channel 3 label.
-  -4, --label4 TEXT  Channel 4 label.
-  -r, --raw          Save raw image (with no annotation or de-cluttering)
-  -c, --csv          Save scope data as csv.
-  -d, --debug        Enable debug logging.
-  --help             Show this message and exit.
+  -h, --hostname TEXT  Oscilloscope IP address.
+  -n, --note TEXT      Note label.
+  -1, --label1 TEXT    Channel 1 label.
+  -2, --label2 TEXT    Channel 2 label.
+  -3, --label3 TEXT    Channel 3 label.
+  -4, --label4 TEXT    Channel 4 label.
+  -r, --raw            Save raw image (with no annotation or de-cluttering).
+  -c, --csv            Save scope data as csv.
+  -d, --debug          Enable debug logging.
+  --help               Show this message and exit.
 
 $
 ```
@@ -97,18 +99,31 @@ Installation:
         - cd path_where_the_OscScreenGrabLAN.py_was_unzipped
     - To run the OscScreenGrabLAN.py in the Terminal, type
         - python OscScreenGrabLAN.py png 192.168.1.3
-    
+
+### Config file
+
+```json
+{
+    "default_hostname": "169.254.247.73",
+    "default_save_path": "$cwd"
+}
+```
+
+### Usage examples
 Other usages syntax:
 
-    python OscScreenGrabLAN.py png|bmp|csv oscilloscope_IP
-
-Usage examples:
-
-    python OscScreenGrabLAN.py png 192.168.1.3
-    python OscScreenGrabLAN.py csv 192.168.1.3
+- Capture a screenshot using the default IP (from config.json) and write it to the current default directory (from config.json) using an auto-assigned filename:
+    - `python OscScreenGrabLAN.py`
+- Capture a screenshot from the scope at 192.168.1.3:
+    - `python OscScreenGrabLAN.py -h 192.168.1.3`
+- Capture a screenshot and save it to `foo.png`:
+    - `python OscScreenGrabLAN.py foo.png`
+- Capture the waveform sample data and save it to `foo.csv`:
+    - `python OscScreenGrabLAN.py foo.csv --csv`
+- Capture a screenshot, annotate the 4 signals, annotate a note, and save to the auto-generated filename `I2C_TRANSFER.png` (based on note name).  Subsequent runs will save to `I2C_TRANSFER_{n}.png` with increasing values of **n**.
+    - `python OscScreenGrabLAN.py -1 I2C_CLK -2 I2C_DATA -3 "CLK (System)" -4 3.3V -n "I2C TRANSFER`
 
 ### Image Annotation
-
 - The following image "clutter" is automatically removed:
     - Left on-screen menu.
     - Right on-screen menu.
