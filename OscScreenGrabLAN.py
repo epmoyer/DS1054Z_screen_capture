@@ -126,7 +126,7 @@ def main(
 
     with open(module_path / Path(CONFIG_FILENAME), 'r') as file:
         config = json.load(file)
-    if hostname in (None, 'default'):
+    if hostname is None:
         hostname = config['default_hostname']
 
     output_dir_path = None
